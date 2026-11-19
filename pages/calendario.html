@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar">
+        <div class="cal-toolbar" style="margin:0">
+          <button type="button" class="btn-icon" id="calPrev" title="Mes anterior"><i class="ph ph-caret-left"></i></button>
+          <button type="button" class="btn-secondary btn-small" id="calToday">Hoy</button>
+          <button type="button" class="btn-icon" id="calNext" title="Mes siguiente"><i class="ph ph-caret-right"></i></button>
+          <strong class="cal-title" id="calMes"></strong>
+          <div class="cal-view-switch">
+            <button type="button" class="active" data-vista="mes">Mes</button>
+            <button type="button" data-vista="semana">Semana</button>
+            <button type="button" data-vista="dia">Día</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label for="calTipo">Tipo</label>
+          <select id="calTipo">
+            <option value="">Todos</option>
+            <option value="evento">Evento</option>
+            <option value="mantenimiento">Mantenimiento</option>
+            <option value="inspeccion">Inspección</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="calSector">Sector</label>
+          <select id="calSector"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="calResponsable">Responsable</label>
+          <select id="calResponsable"><option value="">Todos</option></select>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="calRefresh"><i class="ph ph-arrows-clockwise"></i></button>
+        <button type="button" class="btn-primary" id="calNewBtn"><i class="ph ph-plus"></i> Nuevo evento</button>
+      </div>
+
+      <div class="ops-grid four" id="calKPIs"></div>
+
+      <div class="cal-grid" id="calendarGrid"></div>
+
+      <div class="calendar-legend">
+        <span><i class="dot mantenimiento"></i> Mantenimiento</span>
+        <span><i class="dot inspeccion"></i> Inspección</span>
+        <span><i class="dot otro"></i> Evento general</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="eventModalTitle">Nuevo evento</h2>
+        <button type="button" class="btn-close" data-close-modal="eventModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="eventForm">
+        <input type="hidden" id="eventId">
+        <div class="form-group">
+          <label for="eventTitulo">Título</label>
+          <input type="text" id="eventTitulo" required maxlength="255">
+        </div>
+        <div class="form-group">
+          <label for="eventDescripcion">Descripción</label>
+          <textarea id="eventDescripcion" rows="2" maxlength="5000"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventTipo">Tipo</label>
+            <select id="eventTipo">
+              <option value="evento">Evento</option>
+              <option value="mantenimiento">Mantenimiento</option>
+              <option value="inspeccion">Inspección</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="eventCategoria">Categoría</label>
+            <select id="eventCategoria">
+              <option value="otras">Otras</option>
+              <option value="siembra">Siembra</option>
+              <option value="trasplante">Trasplante</option>
+              <option value="inspeccion">Inspección</option>
+              <option value="mantenimiento_preventivo">Mantenimiento preventivo</option>
+              <option value="mantenimiento_correctivo">Mantenimiento correctivo</option>
+              <option value="limpieza_depositos">Limpieza de depósitos</option>
+              <option value="revision_bombas">Revisión de bombas</option>
+              <option value="revision_sensores">Revisión de sensores</option>
+              <option value="fertilizacion">Fertilización</option>
+              <option value="riego">Riego</option>
+              <option value="cosecha">Cosecha</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventInicio">Inicio</label>
+            <input type="datetime-local" id="eventInicio" required>
+          </div>
+          <div class="form-group">
+            <label for="eventFin">Fin (opcional)</label>
+            <input type="datetime-local" id="eventFin">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventSectorForm">Sector</label>
+            <select id="eventSectorForm"><option value="">Sin sector</option></select>
+          </div>
+          <div class="form-group">
+            <label for="eventCultivoForm">Cultivo</label>
+            <select id="eventCultivoForm"><option value="">Sin cultivo</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="eventResponsableForm">Responsable</label>
+          <select id="eventResponsableForm"><option value="">Sin asignar</option></select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="eventModal">Cancelar</button>
+          <button type="submit" class="btn-primary" id="eventSaveBtn">Guardar evento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="eventDetailModal" role="dialog" aria-modal="true" aria-labelledby="eventDetailTitle">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="eventDetailTitle">Detalle del evento</h2>
+        <button type="button" class="btn-close" data-close-modal="eventDetailModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <div id="eventDetailBody"><div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando…</h3></div></div>
+    </div>
+  </div>
+
+  <div class="modal" id="completeModal" role="dialog" aria-modal="true" aria-labelledby="completeTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="completeTitle">Completar evento</h2>
+        <button type="button" class="btn-close" data-close-modal="completeModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="completeForm">
+        <input type="hidden" id="completeEventId">
+        <div class="form-group">
+          <label for="completeResultado">Resultado</label>
+          <textarea id="completeResultado" rows="2" maxlength="5000" placeholder="Resultado de la actividad"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="completeObservaciones">Observaciones</label>
+          <textarea id="completeObservaciones" rows="2" maxlength="5000"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="completeRecomendaciones">Recomendaciones</label>
+          <textarea id="completeRecomendaciones" rows="2" maxlength="5000"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-row"><input type="checkbox" id="completeIncidencia"> Generar incidencia con los hallazgos</label>
+        </div>
+        <div class="form-row" id="incidenciaExtra" hidden>
+          <div class="form-group">
+            <label for="completeIncTitulo">Título de la incidencia</label>
+            <input type="text" id="completeIncTitulo" maxlength="255">
+          </div>
+          <div class="form-group">
+            <label for="completeIncDesc">Descripción</label>
+            <input type="text" id="completeIncDesc" maxlength="2000">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="completeModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Completar evento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/calendario.js"></script>
+</body>
+</html>

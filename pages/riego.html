@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Riego | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/riego.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="ph ph-plant logo-icon"></i>
+                <span class="logo-text">AquaPlants</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="ph ph-squares-four"></i><span>Inicio</span>
+                </a>
+                <a href="cultivos.html" class="nav-link">
+                    <i class="ph ph-plant"></i><span>Cultivos</span>
+                </a>
+                <a href="alertas.html" class="nav-link">
+                    <i class="ph ph-warning-circle"></i><span>Alertas</span>
+                </a>
+                <a href="historicos.html" class="nav-link">
+                    <i class="ph ph-chart-line-up"></i><span>Históricos</span>
+                </a>
+                <a href="dispositivos.html" class="nav-link">
+                    <i class="ph ph-cpu"></i><span>Dispositivos</span>
+                </a>
+                <a href="riego.html" class="nav-link active">
+                    <i class="ph ph-drop-half-bottom"></i><span>Riego</span>
+                </a>
+                <a href="reportes.html" class="nav-link">
+                    <i class="ph ph-file-text"></i><span>Reportes</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="ph ph-sign-out"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="page-title">
+                    <h1>Control de Riego</h1>
+                    <p id="role-indicator">Gestión de ciclos y activación manual</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <span class="user-role" id="user-role">Rol</span>
+                    </div>
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Summary Cards -->
+                <section class="summary-grid">
+                    <div class="summary-card active">
+                        <div class="summary-icon">
+                            <i class="ph ph-drop"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Zonas Activas</span>
+                            <span class="summary-value" id="active-zones">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card scheduled">
+                        <div class="summary-icon">
+                            <i class="ph ph-calendar-check"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Ciclos Programados</span>
+                            <span class="summary-value" id="scheduled-cycles">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card water-usage">
+                        <div class="summary-icon">
+                            <i class="ph ph-chart-line-up"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Consumo Hoy</span>
+                            <span class="summary-value" id="water-usage">0 L</span>
+                        </div>
+                    </div>
+                    <div class="summary-card efficiency">
+                        <div class="summary-icon">
+                            <i class="ph ph-leaf"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Eficiencia</span>
+                            <span class="summary-value" id="efficiency">-- %</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Irrigation Zones -->
+                <div class="zones-container">
+                    <div class="section-header">
+                        <h2>Zonas de Riego</h2>
+                        <button class="btn-primary" onclick="openScheduleModal()">
+                            <i class="ph ph-plus-circle"></i> Programar Ciclo
+                        </button>
+                    </div>
+
+                    <p class="card-subtitle">Las zonas representan cultivos. Aquí se guardan configuraciones y horarios; sin un controlador conectado, el riego no se activa físicamente.</p>
+                    <div class="zones-grid" id="zones-grid">
+                        <div class="loading-state">
+                            <i class="ph ph-spinner ph-spin"></i>
+                            <p>Cargando zonas de riego...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Irrigation History -->
+                <div class="history-container">
+                    <div class="section-header">
+                        <h2>Historial de Riegos Recientes</h2>
+                        <button class="btn-secondary" onclick="loadHistory()">
+                            <i class="ph ph-arrows-clockwise"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Zona</th>
+                                    <th>Duración</th>
+                                    <th>Consumo</th>
+                                    <th>Tipo</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <tr>
+                                    <td colspan="6" class="loading-row">Cargando historial...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Programar Ciclo -->
+    <div class="modal-overlay" id="schedule-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Programar Ciclo de Riego</h2>
+                <button class="btn-close" onclick="closeScheduleModal()"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="schedule-form" onsubmit="handleScheduleCycle(event)">
+                <div class="form-group">
+                    <label for="zone-select">Zona</label>
+                    <select id="zone-select" name="zona_id" required>
+                        <option value="">Seleccionar zona...</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="schedule-time">Hora de Inicio</label>
+                        <input type="time" id="schedule-time" name="hora_inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="schedule-duration">Duración (minutos)</label>
+                        <input type="number" id="schedule-duration" name="duracion" min="1" max="120" value="15" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="schedule-frequency">Frecuencia</label>
+                    <select id="schedule-frequency" name="frecuencia" required>
+                        <option value="diario">Diario</option>
+                        <option value="lunes">Lunes</option>
+                        <option value="martes">Martes</option>
+                        <option value="miercoles">Miércoles</option>
+                        <option value="jueves">Jueves</option>
+                        <option value="viernes">Viernes</option>
+                        <option value="sabado">Sábado</option>
+                        <option value="domingo">Domingo</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeScheduleModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Programar Ciclo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/riego.js"></script>
+</body>
+</html>

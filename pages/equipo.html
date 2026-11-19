@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipo | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/grupos.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <section class="mi-grupo-panel" id="miGrupoSection" hidden>
+        <div class="ops-card-head">
+          <div>
+            <h2>Mi grupo</h2>
+            <div class="ops-muted" id="miGrupoHint">Solo se muestra el grupo de trabajo al que perteneces.</div>
+          </div>
+        </div>
+        <div id="miGrupo">
+          <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando tu grupo…</h3></div>
+        </div>
+      </section>
+
+      <div class="ops-toolbar">
+        <div class="filter-group">
+          <label for="teamRol">Rol</label>
+          <select id="teamRol">
+            <option value="">Todos</option>
+            <option value="admin">Administrador</option>
+            <option value="administrador">Administrador (alt)</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="encargado">Encargado</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="teamActivo">Estado</label>
+          <select id="teamActivo">
+            <option value="true" selected>Activos</option>
+            <option value="false">Inactivos</option>
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <input type="search" id="teamBuscar" placeholder="Buscar por nombre, usuario o correo…">
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="teamRefresh"><i class="ph ph-arrows-clockwise"></i> Actualizar</button>
+      </div>
+
+      <div class="ops-grid four" id="teamKPIs"></div>
+      <div class="team-grid" id="teamGrid">
+        <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando equipo…</h3></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="memberModal" role="dialog" aria-modal="true" aria-labelledby="memberTitle">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="memberTitle">Ficha del integrante</h2>
+        <button type="button" class="btn-close" data-close-modal="memberModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <div id="memberBody"><div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando…</h3></div></div>
+    </div>
+  </div>
+
+  <div class="modal" id="assignModal" role="dialog" aria-modal="true" aria-labelledby="assignTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="assignTitle">Asignar sectores</h2>
+        <button type="button" class="btn-close" data-close-modal="assignModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="assignForm">
+        <input type="hidden" id="assignUserId">
+        <p class="ops-muted" id="assignInfo"></p>
+        <div class="assign-list" id="assignList"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="assignModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar asignación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/equipo.js"></script>
+</body>
+</html>

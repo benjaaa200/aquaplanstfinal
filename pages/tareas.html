@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tareas | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar">
+        <div class="filter-group">
+          <label for="taskPrioridad">Prioridad</label>
+          <select id="taskPrioridad">
+            <option value="">Todas</option>
+            <option value="critica">Crítica</option>
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="taskResponsable">Responsable</label>
+          <select id="taskResponsable"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="taskSector">Sector</label>
+          <select id="taskSector"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <input type="search" id="taskBuscar" placeholder="Buscar tarea…">
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="taskViewBtn"><i class="ph ph-list"></i> Ver lista</button>
+        <button type="button" class="btn-primary" id="taskNewBtn"><i class="ph ph-plus"></i> Nueva tarea</button>
+      </div>
+
+      <div class="ops-grid three" id="taskKPIs"></div>
+
+      <div class="kanban" id="kanbanBoard">
+        <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando tareas…</h3></div>
+      </div>
+
+      <div class="ops-card" id="taskListView" hidden>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr><th>Tarea</th><th>Responsable</th><th>Sector</th><th>Prioridad</th><th>Estado</th><th>Límite</th><th></th></tr>
+            </thead>
+            <tbody id="taskTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="taskModal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="taskModalTitle">Nueva tarea</h2>
+        <button type="button" class="btn-close" data-close-modal="taskModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="taskForm">
+        <input type="hidden" id="taskId">
+        <div class="form-group">
+          <label for="taskTitulo">Título</label>
+          <input type="text" id="taskTitulo" required maxlength="255">
+        </div>
+        <div class="form-group">
+          <label for="taskDescripcion">Descripción</label>
+          <textarea id="taskDescripcion" rows="3" maxlength="5000"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskCategoria">Categoría</label>
+            <select id="taskCategoria">
+              <option value="general">General</option>
+              <option value="mantenimiento">Mantenimiento</option>
+              <option value="inspeccion">Inspección</option>
+              <option value="limpieza">Limpieza</option>
+              <option value="riego">Riego</option>
+              <option value="control_cultivos">Control de cultivos</option>
+              <option value="inventario">Inventario</option>
+              <option value="reparaciones">Reparaciones</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="taskPrioridadForm">Prioridad</label>
+            <select id="taskPrioridadForm">
+              <option value="baja">Baja</option>
+              <option value="media" selected>Media</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskResponsableForm">Responsable</label>
+            <select id="taskResponsableForm"><option value="">Sin asignar</option></select>
+            <small id="taskResponsableHint" class="ops-small" hidden></small>
+          </div>
+          <div class="form-group">
+            <label for="taskSectorForm">Sector</label>
+            <select id="taskSectorForm"><option value="">Sin sector</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskCultivoForm">Cultivo</label>
+            <select id="taskCultivoForm"><option value="">Sin cultivo</option></select>
+          </div>
+          <div class="form-group">
+            <label for="taskLimite">Fecha límite</label>
+            <input type="datetime-local" id="taskLimite">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="taskObservaciones">Observaciones</label>
+          <textarea id="taskObservaciones" rows="2" maxlength="5000"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="taskModal">Cancelar</button>
+          <button type="submit" class="btn-primary" id="taskSaveBtn">Guardar tarea</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="taskDetailModal" role="dialog" aria-modal="true" aria-labelledby="taskDetailTitle">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="taskDetailTitle">Detalle de tarea</h2>
+        <button type="button" class="btn-close" data-close-modal="taskDetailModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <div id="taskDetailBody"><div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando…</h3></div></div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/tareas.js"></script>
+</body>
+</html>

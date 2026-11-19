@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador IoT | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/simulador.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <section class="sim-hero">
+                <div>
+                    <h2>Simulador de sensores AquaBrain</h2>
+                    <p>Genera mediciones de temperatura, humedad, nivel de agua y pH para probar el monitoreo, los umbrales y las alertas sin hardware físico.</p>
+                </div>
+                <div class="sim-hero-status">
+                    <span class="sim-status" id="simStatus">
+                        <span class="sim-status-dot"></span>
+                        <span id="simStatusText">Detenido</span>
+                    </span>
+                </div>
+            </section>
+
+            <div class="sim-grid">
+                <section class="card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Configuración de la simulación</div>
+                            <div class="card-subtitle">Selecciona un cultivo y ajusta los sensores</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="simCultivo">Cultivo destino</label>
+                        <select id="simCultivo">
+                            <option value="">Cargando cultivos…</option>
+                        </select>
+                    </div>
+
+                    <div class="sim-scenarios" role="group" aria-label="Escenarios predefinidos">
+                        <button type="button" class="sim-scenario active" data-scenario="optimal"><i class="ph ph-check-circle"></i> Óptimo</button>
+                        <button type="button" class="sim-scenario" data-scenario="heat"><i class="ph ph-thermometer-hot"></i> Calor extremo</button>
+                        <button type="button" class="sim-scenario" data-scenario="dry"><i class="ph ph-sun"></i> Humedad baja</button>
+                        <button type="button" class="sim-scenario" data-scenario="water"><i class="ph ph-drop"></i> Agua crítica</button>
+                        <button type="button" class="sim-scenario" data-scenario="random"><i class="ph ph-shuffle"></i> Aleatorio</button>
+                    </div>
+
+                    <div class="sim-slider">
+                        <div class="sim-slider-head">
+                            <label for="simTemp">Temperatura</label>
+                            <span class="sim-slider-value"><span id="simTempValue">24.0</span> °C</span>
+                        </div>
+                        <input type="range" id="simTemp" min="10" max="40" step="0.1" value="24">
+                        <div class="sim-slider-hint"><span>10 °C</span><span>Máx. 30 °C</span><span>40 °C</span></div>
+                    </div>
+
+                    <div class="sim-slider">
+                        <div class="sim-slider-head">
+                            <label for="simHum">Humedad ambiental</label>
+                            <span class="sim-slider-value"><span id="simHumValue">65.0</span> %</span>
+                        </div>
+                        <input type="range" id="simHum" min="0" max="100" step="0.1" value="65">
+                        <div class="sim-slider-hint"><span>0 %</span><span>Mín. 40 %</span><span>100 %</span></div>
+                    </div>
+
+                    <div class="sim-slider">
+                        <div class="sim-slider-head">
+                            <label for="simWater">Nivel de agua</label>
+                            <span class="sim-slider-value"><span id="simWaterValue">72.0</span> %</span>
+                        </div>
+                        <input type="range" id="simWater" min="0" max="100" step="0.1" value="72">
+                        <div class="sim-slider-hint"><span>0 %</span><span>Mín. 20 %</span><span>100 %</span></div>
+                    </div>
+
+                    <div class="sim-slider">
+                        <div class="sim-slider-head">
+                            <label for="simPh">pH del agua</label>
+                            <span class="sim-slider-value"><span id="simPhValue">6.2</span> pH</span>
+                        </div>
+                        <input type="range" id="simPh" min="3" max="9" step="0.1" value="6.2">
+                        <div class="sim-slider-hint"><span>3.0</span><span>Rango ideal 5.5 – 7.0</span><span>9.0</span></div>
+                    </div>
+
+                    <div class="sim-controls">
+                        <div class="form-group">
+                            <label for="simInterval">Intervalo</label>
+                            <select id="simInterval">
+                                <option value="3000">Cada 3 segundos</option>
+                                <option value="5000" selected>Cada 5 segundos</option>
+                                <option value="10000">Cada 10 segundos</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-primary" id="simStart"><i class="ph ph-play"></i> Iniciar simulación</button>
+                        <button type="button" class="btn-secondary" id="simStop" disabled><i class="ph ph-stop"></i> Detener</button>
+                        <button type="button" class="btn-secondary" id="simSend"><i class="ph ph-paper-plane-tilt"></i> Enviar ahora</button>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Lecturas en vivo</div>
+                            <div class="card-subtitle">Valores que se enviarán al endpoint de mediciones</div>
+                        </div>
+                    </div>
+
+                    <div class="sim-readings">
+                        <div class="sim-reading" id="readingTemp">
+                            <div class="sim-reading-label"><i class="ph ph-thermometer"></i> Temperatura</div>
+                            <div class="sim-reading-value"><span id="readingTempValue">24.0</span> °C</div>
+                        </div>
+                        <div class="sim-reading" id="readingHum">
+                            <div class="sim-reading-label"><i class="ph ph-drop"></i> Humedad</div>
+                            <div class="sim-reading-value"><span id="readingHumValue">65.0</span> %</div>
+                        </div>
+                        <div class="sim-reading" id="readingWater">
+                            <div class="sim-reading-label"><i class="ph ph-waves"></i> Nivel de agua</div>
+                            <div class="sim-reading-value"><span id="readingWaterValue">72.0</span> %</div>
+                        </div>
+                        <div class="sim-reading" id="readingPh">
+                            <div class="sim-reading-label"><i class="ph ph-flask"></i> pH</div>
+                            <div class="sim-reading-value"><span id="readingPhValue">6.2</span> pH</div>
+                        </div>
+                    </div>
+
+                    <div class="sim-alert-preview" id="simAlertPreview"></div>
+
+                    <div class="sim-session">
+                        <div class="sim-session-item"><span>Mediciones enviadas</span><strong id="simSent">0</strong></div>
+                        <div class="sim-session-item"><span>Alertas generadas</span><strong id="simAlerts">0</strong></div>
+                        <div class="sim-session-item"><span>Intervalo activo</span><strong id="simIntervalLabel">5 s</strong></div>
+                        <div class="sim-session-item"><span>Último envío</span><strong id="simLast">—</strong></div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Registro de envíos</div>
+                        <div class="card-subtitle">Historial de esta sesión de simulación</div>
+                    </div>
+                    <button type="button" class="btn-secondary btn-small" id="simClear"><i class="ph ph-trash"></i> Limpiar registro</button>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table sim-log-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Cultivo</th>
+                                <th>Temperatura</th>
+                                <th>Humedad</th>
+                                <th>Nivel de agua</th>
+                                <th>pH</th>
+                                <th>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="simLogBody">
+                            <tr><td colspan="7" class="sim-log-empty">Aún no se han enviado mediciones en esta sesión.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="simulator.js"></script>
+</body>
+</html>

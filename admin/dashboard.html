@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #eef3f2;
+      --surface: #ffffff;
+      --ink: #10231f;
+      --muted: #5b706b;
+      --line: #dbe5e2;
+      --soft: #f4f8f7;
+      --aqua: #0891b2;
+      --aqua-soft: #d9f2f7;
+      --aqua-dark: #0e7490;
+      --leaf: #16a34a;
+      --leaf-soft: #dcf5e4;
+      --leaf-dark: #15803d;
+      --amber: #d97706;
+      --amber-soft: #fdecc8;
+      --red: #dc2626;
+      --red-soft: #fde0e0;
+      --side: #0d2a2b;
+      --side-ink: #a8c4c0;
+      --side-on: #17413f;
+      --w: 248px;
+      --r: 14px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a1516;
+      --surface: #112224;
+      --ink: #e6f1ee;
+      --muted: #8aa5a0;
+      --line: #1f3a3a;
+      --soft: #0e1d1f;
+      --aqua: #38bdf8;
+      --aqua-soft: #12384a;
+      --aqua-dark: #7dd3fc;
+      --leaf: #4ade80;
+      --leaf-soft: #12361f;
+      --leaf-dark: #86efac;
+      --amber: #fbbf24;
+      --amber-soft: #3b2d0c;
+      --red: #f87171;
+      --red-soft: #401919;
+      --side: #071112;
+      --side-on: #143231;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      min-height: 100vh;
+      transition: background .25s, color .25s;
+    }
+
+    h1, h2, h3, .num { font-family: 'Sora', 'Inter', sans-serif; }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--aqua); outline-offset: 2px; }
+
+    /* Barra lateral */
+    .sidebar {
+      width: var(--w);
+      background: var(--side);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 100;
+      transition: transform .25s;
+    }
+    .logo {
+      padding: 22px 22px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+    }
+    .logo i { font-size: 30px; color: #4ade80; }
+    .logo h1 { font-size: 1.2rem; }
+    .logo span { color: #4ade80; }
+    .nav { list-style: none; padding: 8px 12px; flex: 1; }
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      margin-bottom: 3px;
+      color: var(--side-ink);
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: .92rem;
+      transition: background .15s, color .15s;
+    }
+    .nav a:hover { background: var(--side-on); color: #fff; }
+    .nav a.active {
+      background: var(--side-on);
+      color: #fff;
+      box-shadow: inset 3px 0 0 #4ade80;
+    }
+    .nav i { font-size: 20px; }
+    .nav .sep {
+      font-size: .72rem;
+      color: #5f8480;
+      padding: 14px 14px 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      font-weight: 600;
+    }
+    .side-foot { padding: 14px; border-top: 1px solid #ffffff14; }
+    .btn-logout {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background: #ffffff10;
+      color: #fecaca;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: #ffffff1c; }
+
+    /* Contenido principal */
+    .main {
+      margin-left: var(--w);
+      flex: 1;
+      min-width: 0;
+      padding: 28px 32px 48px;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .menu-btn {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 20px;
+    }
+    .top h2 { font-size: 1.6rem; line-height: 1.2; }
+    .top p { color: var(--muted); font-size: .9rem; margin-top: 2px; }
+    .top .grow { flex: 1; }
+    .icon-btn {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      transition: border-color .15s;
+    }
+    .icon-btn:hover { border-color: var(--aqua); }
+    .dot {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--red);
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      padding: 0 4px;
+    }
+    .dot:empty { display: none; }
+    .me {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 5px 14px 5px 5px;
+      border-radius: 999px;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: .85rem;
+      flex: none;
+    }
+    .me .n { font-weight: 600; font-size: .85rem; line-height: 1.1; }
+    .me .r { font-size: .72rem; color: var(--muted); text-transform: capitalize; }
+
+    /* Status banner */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--r);
+      margin-bottom: 20px;
+      background: var(--amber-soft);
+      border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+    }
+    .status.ok {
+      background: var(--leaf-soft);
+      border-color: color-mix(in srgb, var(--leaf) 35%, transparent);
+    }
+    .status i { font-size: 28px; color: var(--amber); }
+    .status.ok i { color: var(--leaf); }
+    .status b { display: block; font-family: Sora, sans-serif; }
+    .status span { font-size: .85rem; color: var(--muted); }
+    .status time { margin-left: auto; font-size: .85rem; color: var(--muted); }
+
+    /* KPIs Grid */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .kpi { display: flex; flex-direction: column; gap: 6px; }
+    .kpi .l {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .85rem;
+      font-weight: 500;
+    }
+    .kpi .l i { font-size: 18px; }
+    .kpi .num { font-size: 2rem; line-height: 1.1; font-weight: 700; }
+    .kpi .d { font-size: .8rem; color: var(--muted); }
+    .kpi .d.good { color: var(--leaf); font-weight: 500; }
+    .kpi .d.bad { color: var(--red); font-weight: 500; }
+    .kpi svg { width: 100%; height: 34px; margin-top: 4px; }
+
+    .grid { display: grid; gap: 16px; margin-bottom: 20px; }
+    .g-2 { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+    .g-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .head h3 { font-size: 1.05rem; margin-right: auto; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-weight: 600;
+      font-size: .85rem;
+      transition: border-color .15s, background .15s;
+      color: var(--ink);
+    }
+    .btn:hover { border-color: var(--aqua); }
+    .btn.primary { background: var(--aqua); border-color: var(--aqua); color: #fff; }
+    .field {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: .88rem;
+    }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: none;
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+
+    /* Tablas */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: .8rem;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    td { padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: var(--soft); }
+
+    .who { display: flex; align-items: center; gap: 10px; }
+    .who small { display: block; color: var(--muted); font-size: .78rem; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .b-admin { background: var(--aqua-soft); color: var(--aqua); }
+    .b-supervisor { background: var(--leaf-soft); color: var(--leaf); }
+    .b-encargado { background: var(--amber-soft); color: var(--amber); }
+    .b-alta { background: var(--red-soft); color: var(--red); }
+    .b-media { background: var(--amber-soft); color: var(--amber); }
+    .b-baja { background: var(--aqua-soft); color: var(--aqua); }
+    .b-ok { background: var(--leaf-soft); color: var(--leaf); }
+    .b-off { background: var(--red-soft); color: var(--red); }
+
+    .sw {
+      width: 38px;
+      height: 22px;
+      border-radius: 11px;
+      border: 0;
+      background: var(--line);
+      position: relative;
+      transition: background .2s;
+    }
+    .sw::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+    }
+    .sw[aria-checked="true"] { background: var(--leaf); }
+    .sw[aria-checked="true"]::after { transform: translateX(16px); }
+
+    .act { background: none; border: 0; color: var(--muted); font-size: 18px; padding: 4px; border-radius: 6px; cursor: pointer; }
+    .act:hover { color: var(--aqua); }
+    .act.del:hover { color: var(--red); }
+
+    .alerts { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 330px; overflow: auto; }
+    .alerts li {
+      display: flex;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: var(--soft);
+      border-left: 3px solid var(--aqua);
+      font-size: .86rem;
+    }
+    .alerts li.alta { border-color: var(--red); }
+    .alerts li.media { border-color: var(--amber); }
+    .alerts li.read { opacity: .5; }
+    .alerts .tx { flex: 1; }
+    .alerts small { display: block; color: var(--muted); font-size: .76rem; margin-top: 2px; }
+
+    .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; min-width: 70px; }
+    .bar i { display: block; height: 100%; border-radius: 3px; }
+    .chart { position: relative; height: 280px; }
+
+    #toasts {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 300;
+    }
+    .toast {
+      background: var(--ink);
+      color: var(--surface);
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-size: .87rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .scrim { display: none; }
+    @media(max-width: 1100px) { .g-2, .g-3 { grid-template-columns: minmax(0, 1fr); } }
+    @media(max-width: 860px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: none; }
+      .scrim.open { display: block; position: fixed; inset: 0; background: #0006; z-index: 90; }
+      .main { margin-left: 0; padding: 18px 14px 40px; }
+      .menu-btn { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Barra lateral unificada del Administrador -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <i class="ph ph-plant"></i>
+      <h1>Aqua<span>Plants</span></h1>
+    </div>
+    <ul class="nav">
+      <li class="sep">Principal</li>
+      <li><a href="dashboard.html" class="active" aria-current="page"><i class="ph ph-shield-check"></i> Inicio</a></li>
+      <li><a href="../pages/cultivos.html"><i class="ph ph-plant"></i> Cultivos</a></li>
+      <li><a href="../pages/alertas.html"><i class="ph ph-bell"></i> Alertas</a></li>
+
+      <li class="sep">Gestión Administrativa</li>
+      <li><a href="usuarios.html"><i class="ph ph-users"></i> Usuarios</a></li>
+      <li><a href="dispositivos.html"><i class="ph ph-cpu"></i> Dispositivos IoT</a></li>
+      <li><a href="instalaciones.html"><i class="ph ph-buildings"></i> Instalaciones</a></li>
+      <li><a href="umbrales.html"><i class="ph ph-sliders"></i> Umbrales</a></li>
+
+      <li class="sep">Operaciones</li>
+      <li><a href="../pages/riego.html"><i class="ph ph-drop"></i> Control de Riego</a></li>
+      <li><a href="../pages/reportes.html"><i class="ph ph-file-text"></i> Reportes</a></li>
+      <li><a href="../pages/comparador.html"><i class="ph ph-arrows-left-right"></i> Comparador</a></li>
+    </ul>
+    <div class="side-foot">
+      <button class="btn-logout" id="logoutBtn" onclick="logout()">
+        <i class="ph ph-sign-out"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- Contenido principal -->
+  <main class="main">
+    <header class="top">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú"><i class="ph ph-list"></i></button>
+      <div class="grow">
+        <h2>Panel de Administración 360°</h2>
+        <p>Monitoreo ejecutivo integral de cultivos, instalaciones, hardware y accesos</p>
+      </div>
+      <button class="icon-btn" id="themeBtn" aria-label="Cambiar tema"><i class="ph ph-moon"></i></button>
+      <button class="icon-btn" id="bellBtn" aria-label="Ver alertas"><i class="ph ph-bell"></i><span class="dot" id="bellDot"></span></button>
+      <div class="me">
+        <div class="avatar" id="userAvatar" style="background:var(--aqua)">A</div>
+        <div>
+          <div class="n" id="userName">Admin</div>
+          <div class="r" id="userRole">admin</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Estado del sistema -->
+    <section class="status" id="status" role="status"></section>
+
+    <!-- KPIs Unificados (Gestión + Clima de Cultivos) -->
+    <section class="kpis" id="kpis"></section>
+
+    <!-- Gráficos de Actividad y Alertas -->
+    <section class="grid g-2">
+      <div class="card">
+        <div class="head">
+          <h3>Actividad del sistema</h3>
+          <div class="chips" id="rangeChips">
+            <button class="chip" data-r="7" aria-pressed="true">7 días</button>
+            <button class="chip" data-r="30" aria-pressed="false">30 días</button>
+          </div>
+        </div>
+        <div class="chart"><canvas id="activityChart"></canvas></div>
+      </div>
+      <div class="card" id="alertsCard">
+        <div class="head">
+          <h3>Alertas críticas del sistema</h3>
+          <button class="btn" id="readAll"><i class="ph ph-checks"></i> Marcar todas</button>
+        </div>
+        <div class="chips" id="sevChips" style="margin-bottom:12px">
+          <button class="chip" data-s="todas" aria-pressed="true">Todas</button>
+          <button class="chip" data-s="alta" aria-pressed="false">Alta</button>
+          <button class="chip" data-s="media" aria-pressed="false">Media</button>
+          <button class="chip" data-s="baja" aria-pressed="false">Baja</button>
+        </div>
+        <ul class="alerts" id="alertList"></ul>
+      </div>
+    </section>
+
+    <!-- Usuarios con acciones rápidas -->
+    <section class="card" style="margin-bottom:20px">
+      <div class="head">
+        <h3>Cuentas de usuario registradas</h3>
+        <input class="field" id="q" type="search" placeholder="Buscar por nombre o correo...">
+        <select class="field" id="roleF">
+          <option value="">Todos los roles</option>
+          <option value="admin">Administrador</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="encargado">Encargado</option>
+        </select>
+        <a href="usuarios.html" class="btn primary"><i class="ph ph-user-plus"></i> Gestionar Usuarios</a>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Último acceso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="userBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Estado de Infraestructura: Instalaciones y Dispositivos -->
+    <section class="grid g-3">
+      <div class="card">
+        <div class="head">
+          <h3>Instalaciones Hidropónicas</h3>
+          <a href="instalaciones.html" class="btn btn-sm"><i class="ph ph-arrow-up-right"></i> Ver todas</a>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Sitio</th><th>Nodos IoT</th><th>Salud</th></tr></thead>
+            <tbody id="instBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="head">
+          <h3>Dispositivos y Sensores</h3>
+          <a href="dispositivos.html" class="btn btn-sm"><i class="ph ph-arrow-up-right"></i> Ver catálogo</a>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Identificador</th><th>Última señal</th><th>Estado</th></tr></thead>
+            <tbody id="devBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script>
+  (function(){
+    const $ = s => document.querySelector(s);
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    const ROLE = { admin: 'Administrador', supervisor: 'Supervisor', encargado: 'Encargado' };
+    const COL = { admin: 'var(--aqua)', supervisor: 'var(--leaf)', encargado: 'var(--amber)' };
+
+    let user = null;
+    try { user = checkAuth(); } catch(e) {}
+    if (!user || user.role !== 'admin') {
+      alert('Acceso denegado. Solo administradores.');
+      location.href = '../index.html';
+      return;
+    }
+
+    const nm = user.name || user.sub || 'Admin';
+    $('#userName').textContent = nm;
+    $('#userRole').textContent = user.role;
+    $('#userAvatar').textContent = nm.charAt(0).toUpperCase();
+
+    let users = [
+      { id: 1, name: 'Admin Principal', email: 'admin@aquaplants.cl', role: 'admin', active: true, last: 'Hoy, 09:12' },
+      { id: 2, name: 'Supervisor General', email: 'supervisor@aquaplants.cl', role: 'supervisor', active: true, last: 'Hoy, 08:40' },
+      { id: 3, name: 'Encargado Cultivo A', email: 'encargado@aquaplants.cl', role: 'encargado', active: true, last: 'Ayer, 18:05' },
+      { id: 4, name: 'Camila Rojas', email: 'camila.rojas@aquaplants.cl', role: 'encargado', active: true, last: 'Ayer, 16:30' },
+      { id: 5, name: 'Tomás Vera', email: 'tomas.vera@aquaplants.cl', role: 'supervisor', active: false, last: '12 oct, 11:20' },
+      { id: 6, name: 'Daniela Soto', email: 'daniela.soto@aquaplants.cl', role: 'encargado', active: true, last: 'Hoy, 07:55' }
+    ];
+
+    let alerts = [
+      { id: 1, sev: 'alta', msg: 'pH fuera de rango (7,9) en canal principal', site: 'Invernadero Norte', time: 'Hace 12 min', read: false },
+      { id: 2, sev: 'alta', msg: 'Sensor de nivel de agua sin señal', site: 'Módulo 3', time: 'Hace 34 min', read: false },
+      { id: 3, sev: 'media', msg: 'Temperatura sobre 28 °C bajo malla sombra', site: 'Invernadero Sur', time: 'Hace 1 h', read: false },
+      { id: 4, sev: 'media', msg: 'Conductividad EC en descenso (1.1 mS/cm)', site: 'Módulo 1', time: 'Hace 3 h', read: true },
+      { id: 5, sev: 'baja', msg: 'Batería del nodo Zigbee al 18 %', site: 'Módulo 5', time: 'Hace 5 h', read: false }
+    ];
+
+    const insts = [
+      ['Invernadero Norte (NFT)', 6, 92],
+      ['Invernadero Sur (Goteo)', 5, 74],
+      ['Módulo 1 (Vertical)', 4, 96],
+      ['Módulo 3 (Aromáticas)', 3, 58],
+      ['Módulo 5 (Germinación)', 3, 88],
+      ['Vivero Central', 3, 95]
+    ];
+
+    const devs = [
+      ['SEN-PH-01', 'Hace 1 min', 1],
+      ['SEN-TEMP-02', 'Hace 2 min', 1],
+      ['ACT-BOMB-01', 'Hace 1 min', 1],
+      ['SEN-EC-03', 'Hace 3 min', 1],
+      ['ACT-VALV-02', 'Hace 5 h', 0]
+    ];
+
+    const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+    function spark(d, c) {
+      const m = Math.max(...d), n = Math.min(...d), w = 100, h = 30;
+      const p = d.map((v, i) => `${(i / (d.length - 1) * w).toFixed(1)},${(h - 2 - (v - n) / ((m - n) || 1) * (h - 4)).toFixed(1)}`).join(' ');
+      return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+    }
+
+    function renderTop() {
+      const open = alerts.filter(a => !a.read), hi = open.filter(a => a.sev === 'alta').length;
+      const s = $('#status');
+      s.className = 'status' + (hi ? '' : ' ok');
+      s.innerHTML = hi
+        ? `<i class="ph ph-warning-circle"></i><div><b>${hi} ${hi > 1 ? 'alertas críticas requieren' : 'alerta crítica requiere'} atención inmediata</b><span>Revisa los umbrales de pH y nivel de agua para proteger los cultivos.</span></div><time id="clock"></time>`
+        : `<i class="ph ph-check-circle"></i><div><b>Todo funciona con normalidad</b><span>Todos los invernaderos operan dentro de los umbrales seguros.</span></div><time id="clock"></time>`;
+      tick();
+
+      const act = users.filter(u => u.active).length, off = devs.filter(d => !d[2]).length;
+      const k = [
+        ['ph-users', 'Usuarios', users.length, `${act} activos`, 'good', [8,9,9,10,11,11,users.length], 'var(--aqua)'],
+        ['ph-buildings', 'Instalaciones', insts.length, 'Todas operativas', 'good', [6,6,7,7,8,8,8], 'var(--leaf)'],
+        ['ph-cpu', 'Dispositivos', 24, off ? `${off} sin conexión` : 'Todos en línea', off ? 'bad' : 'good', [22,23,24,23,24,23,23], 'var(--amber)'],
+        ['ph-bell-ringing', 'Alertas abiertas', open.length, `${hi} críticas`, hi ? 'bad' : 'good', [2,5,3,7,4,6,open.length], 'var(--red)'],
+        ['ph-thermometer', 'Temp. Promedio', '24.2 °C', 'Rango ideal (20-26°C)', 'good', [23,24,24,25,24,24,24.2], 'var(--aqua)'],
+        ['ph-drop', 'Humedad Relativa', '68 %', 'Óptima para follaje', 'good', [65,66,68,70,69,67,68], 'var(--leaf)'],
+        ['ph-flask', 'pH Solución', '6.2 pH', 'Equilibrio de sales', 'good', [6.1,6.2,6.3,6.2,6.2,6.1,6.2], 'var(--amber)'],
+        ['ph-waves', 'Nivel de Agua', '87 %', 'Reserva suficiente', 'good', [92,90,88,89,86,88,87], 'var(--aqua)']
+      ];
+
+      $('#kpis').innerHTML = k.map(x => `
+        <div class="card kpi">
+          <div class="l"><i class="ph ${x[0]}"></i>${x[1]}</div>
+          <div class="num">${x[2]}</div>
+          <div class="d ${x[4]}">${x[3]}</div>
+          ${spark(x[5], x[6])}
+        </div>
+      `).join('');
+
+      const b = $('#bellDot');
+      b.textContent = open.length || '';
+    }
+
+    function tick() {
+      const c = $('#clock');
+      if (c) c.textContent = new Date().toLocaleString('es-CL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+    setInterval(tick, 30000);
+
+    let sev = 'todas';
+    function renderAlerts() {
+      const l = alerts.filter(a => sev === 'todas' || a.sev === sev);
+      $('#alertList').innerHTML = l.length ? l.map(a => `
+        <li class="${a.sev}${a.read ? ' read' : ''}">
+          <span class="badge b-${a.sev}" style="align-self:flex-start">${a.sev.toUpperCase()}</span>
+          <div class="tx">${esc(a.msg)}<small>${esc(a.site)} · ${a.time}</small></div>
+          ${a.read ? '' : `<button class="act" data-read="${a.id}" aria-label="Marcar como leída"><i class="ph ph-check"></i></button>`}
+        </li>
+      `).join('') : '<li style="padding:24px;text-align:center;color:var(--muted)">No hay alertas en este filtro.</li>';
+      renderTop();
+    }
+
+    $('#sevChips').onclick = e => {
+      const b = e.target.closest('.chip');
+      if (!b) return;
+      sev = b.dataset.s;
+      [...$('#sevChips').children].forEach(c => c.setAttribute('aria-pressed', c === b));
+      renderAlerts();
+    };
+
+    $('#alertList').onclick = e => {
+      const b = e.target.closest('[data-read]');
+      if (!b) return;
+      const al = alerts.find(a => a.id == b.dataset.read);
+      if (al) al.read = true;
+      renderAlerts();
+    };
+
+    $('#readAll').onclick = () => {
+      alerts.forEach(a => a.read = true);
+      renderAlerts();
+    };
+
+    function renderUsers() {
+      const q = ($('#q').value || '').trim().toLowerCase();
+      const r = $('#roleF').value;
+      const l = users.filter(u => (!r || u.role === r) && (!q || (u.name + u.email).toLowerCase().includes(q)));
+      $('#userBody').innerHTML = l.map(u => `
+        <tr>
+          <td>
+            <div class="who">
+              <div class="avatar" style="background:${COL[u.role]};width:28px;height:28px;font-size:.78rem;">${esc(u.name[0])}</div>
+              <div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div>
+            </div>
+          </td>
+          <td><span class="badge b-${u.role}">${ROLE[u.role]}</span></td>
+          <td>${u.last}</td>
+          <td><span class="badge ${u.active ? 'b-ok' : 'b-off'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
+        </tr>
+      `).join('');
+    }
+    $('#q').oninput = renderUsers;
+    $('#roleF').onchange = renderUsers;
+
+    function renderTables() {
+      $('#instBody').innerHTML = insts.map(i => {
+        const c = i[2] >= 85 ? 'var(--leaf)' : i[2] >= 65 ? 'var(--amber)' : 'var(--red)';
+        return `<tr><td>${i[0]}</td><td>${i[1]} nodos</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><i style="width:${i[2]}%;background:${c}"></i></div>${i[2]}%</div></td></tr>`;
+      }).join('');
+
+      $('#devBody').innerHTML = devs.map(d => `
+        <tr><td><b>${d[0]}</b></td><td>${d[1]}</td><td><span class="badge ${d[2] ? 'b-ok' : 'b-off'}">${d[2] ? 'En línea' : 'Sin señal'}</span></td></tr>
+      `).join('');
+    }
+
+    let cAct, range = 7;
+    function days(n) {
+      const out = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        out.push(d.toLocaleDateString('es-CL', n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }));
+      }
+      return out;
+    }
+    function drawCharts() {
+      Chart.defaults.font.family = 'Inter, sans-serif';
+      Chart.defaults.color = css('--muted');
+      const grid = css('--line');
+      if (cAct) cAct.destroy();
+      const logins = range === 7 ? [45, 52, 38, 65, 48, 25, 18] : [32, 40, 45, 52, 60, 48, 35, 42, 50, 48, 55, 62, 58, 45];
+      const al = range === 7 ? [5, 8, 3, 12, 6, 2, 1] : [2, 4, 3, 5, 8, 4, 2, 6, 3, 1, 4, 7, 5, 2];
+
+      cAct = new Chart($('#activityChart'), {
+        type: range === 7 ? 'bar' : 'line',
+        data: {
+          labels: days(range === 7 ? 7 : 14),
+          datasets: [
+            { label: 'Inicios de sesión', data: logins, backgroundColor: css('--aqua'), borderColor: css('--aqua'), borderRadius: 6, tension: .35, borderWidth: 2 },
+            { label: 'Alertas del sistema', data: al, backgroundColor: css('--red'), borderColor: css('--red'), borderRadius: 6, tension: .35, borderWidth: 2 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, grid: { color: grid } }, x: { grid: { display: false } } }
+        }
+      });
+    }
+
+    $('#rangeChips').onclick = e => {
+      const b = e.target.closest('.chip');
+      if (!b) return;
+      range = +b.dataset.r;
+      [...$('#rangeChips').children].forEach(c => c.setAttribute('aria-pressed', c === b));
+      drawCharts();
+    };
+
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      $('#themeBtn i').className = 'ph ph-' + (t === 'dark' ? 'sun' : 'moon');
+      try { localStorage.setItem('aq-theme', t); } catch(e) {}
+    }
+    let saved = localStorage.getItem('aq-theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+    setTheme(saved);
+    $('#themeBtn').onclick = () => { setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); drawCharts(); };
+
+    const side = $('#sidebar'), scrim = $('#scrim');
+    $('#menuBtn').onclick = () => { side.classList.add('open'); scrim.classList.add('open'); };
+    scrim.onclick = () => { side.classList.remove('open'); scrim.classList.remove('open'); };
+
+    renderTop();
+    renderAlerts();
+    renderUsers();
+    renderTables();
+    drawCharts();
+  })();
+  </script>
+</body>
+</html>

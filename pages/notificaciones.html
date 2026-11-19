@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notificaciones | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar">
+        <div class="filter-group">
+          <label for="notifCategoria">Categoría</label>
+          <select id="notifCategoria">
+            <option value="">Todas</option>
+            <option value="sistema">Sistema</option>
+            <option value="riego">Riego</option>
+            <option value="sensores">Sensores</option>
+            <option value="alerta">Alertas</option>
+            <option value="incidencia">Incidencias</option>
+            <option value="mantenimiento">Mantenimiento</option>
+            <option value="inspeccion">Inspección</option>
+            <option value="inventario">Inventario</option>
+            <option value="tarea">Tareas</option>
+            <option value="calendario">Calendario</option>
+            <option value="equipo">Equipo</option>
+            <option value="clima">Clima</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="notifPrioridad">Prioridad</label>
+          <select id="notifPrioridad">
+            <option value="">Todas</option>
+            <option value="urgente">Urgente</option>
+            <option value="importante">Importante</option>
+            <option value="info">Informativa</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="checkbox-row"><input type="checkbox" id="notifNoLeidas"> Solo no leídas</label>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="notifMarkAll"><i class="ph ph-checks"></i> Marcar todas</button>
+        <button type="button" class="btn-primary" id="notifSendBtn"><i class="ph ph-paper-plane-tilt"></i> Enviar comunicación</button>
+      </div>
+
+      <div class="ops-grid three" id="notifKPIs"></div>
+      <div class="notification-list" id="notifList">
+        <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando notificaciones…</h3></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="sendModal" role="dialog" aria-modal="true" aria-labelledby="sendTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="sendTitle">Enviar comunicación</h2>
+        <button type="button" class="btn-close" data-close-modal="sendModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="sendForm">
+        <div class="form-group">
+          <label for="sendTitulo">Título</label>
+          <input type="text" id="sendTitulo" required maxlength="255">
+        </div>
+        <div class="form-group">
+          <label for="sendMensaje">Mensaje</label>
+          <textarea id="sendMensaje" rows="3" required maxlength="5000"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="sendCategoria">Categoría</label>
+            <select id="sendCategoria">
+              <option value="sistema">Sistema</option>
+              <option value="riego">Riego</option>
+              <option value="mantenimiento">Mantenimiento</option>
+              <option value="inventario">Inventario</option>
+              <option value="alerta">Alerta</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="sendPrioridad">Prioridad</label>
+            <select id="sendPrioridad">
+              <option value="info">Informativa</option>
+              <option value="importante">Importante</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="sendUrl">Enlace (opcional)</label>
+          <input type="text" id="sendUrl" maxlength="255" placeholder="../pages/tareas.html">
+        </div>
+        <div class="form-group">
+          <label>Roles destinatarios</label>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <label class="checkbox-row"><input type="checkbox" value="admin" class="sendRol"> Administrador</label>
+            <label class="checkbox-row"><input type="checkbox" value="administrador" class="sendRol"> Administrador (alt)</label>
+            <label class="checkbox-row"><input type="checkbox" value="supervisor" class="sendRol"> Supervisor</label>
+            <label class="checkbox-row"><input type="checkbox" value="encargado" class="sendRol"> Encargado</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="sendUsuarios">Usuarios específicos (opcional)</label>
+          <select id="sendUsuarios" multiple size="4"></select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="sendModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/notificaciones.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Históricos | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js via CDN (librería ligera, no framework) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="../css/historicos.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="ph ph-plant logo-icon"></i>
+                <span class="logo-text">AquaPlants</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="ph ph-squares-four"></i><span>Inicio</span>
+                </a>
+                <a href="cultivos.html" class="nav-link">
+                    <i class="ph ph-plant"></i><span>Cultivos</span>
+                </a>
+                <a href="alertas.html" class="nav-link">
+                    <i class="ph ph-warning-circle"></i><span>Alertas</span>
+                </a>
+                <a href="historicos.html" class="nav-link active">
+                    <i class="ph ph-chart-line-up"></i><span>Históricos</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="ph ph-sign-out"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="page-title">
+                    <h1>Análisis Histórico</h1>
+                    <p id="role-indicator">Tendencias y patrones de tus cultivos</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <span class="user-role" id="user-role">Rol</span>
+                    </div>
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Controls -->
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label for="crop-select">Cultivo:</label>
+                        <select id="crop-select" onchange="loadHistoricalData()">
+                            <option value="all">Todos los cultivos</option>
+                            <option value="1">Lechuga Romana - Invernadero A</option>
+                            <option value="2">Albahaca - Módulo 3</option>
+                            <option value="3">Tomate Cherry - Invernadero B</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="metric-select">Métrica:</label>
+                        <select id="metric-select" onchange="updateCharts()">
+                            <option value="temperatura">Temperatura (°C)</option>
+                            <option value="humedad">Humedad (%)</option>
+                            <option value="nivel_agua">Nivel de Agua (%)</option>
+                            <option value="todas">Todas las métricas</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="range-select">Rango:</label>
+                        <select id="range-select" onchange="loadHistoricalData()">
+                            <option value="24h">Últimas 24 horas</option>
+                            <option value="7d" selected>Últimos 7 días</option>
+                            <option value="30d">Últimos 30 días</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="custom-range" style="display: none;">
+                        <label for="date-start">Desde:</label>
+                        <input type="date" id="date-start">
+                        <label for="date-end">Hasta:</label>
+                        <input type="date" id="date-end">
+                        <button class="btn-apply" onclick="loadHistoricalData()">Aplicar</button>
+                    </div>
+                </div>
+
+                <!-- Statistics Summary -->
+                <section class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-cyan">
+                            <i class="ph ph-thermometer"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Promedio Temperatura</span>
+                            <span class="stat-value" id="avg-temp">-- °C</span>
+                            <span class="stat-trend" id="trend-temp">
+                                <i class="ph ph-trend-up"></i> +0.5°C vs anterior
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green">
+                            <i class="ph ph-drop"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Promedio Humedad</span>
+                            <span class="stat-value" id="avg-humidity">-- %</span>
+                            <span class="stat-trend" id="trend-humidity">
+                                <i class="ph ph-trend-down"></i> -2% vs anterior
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue">
+                            <i class="ph ph-wave-sine"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Promedio Nivel Agua</span>
+                            <span class="stat-value" id="avg-water">-- %</span>
+                            <span class="stat-trend" id="trend-water">
+                                <i class="ph ph-trend-up"></i> +1% vs anterior
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-purple">
+                            <i class="ph ph-chart-bar"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Total Mediciones</span>
+                            <span class="stat-value" id="total-measurements">--</span>
+                            <span class="stat-trend neutral">
+                                <i class="ph ph-database"></i> Datos analizados
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Charts -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Tendencia de Temperatura</h3>
+                            <button class="btn-export" onclick="exportChart('tempChart')">
+                                <i class="ph ph-download-simple"></i> Exportar
+                            </button>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Tendencia de Humedad</h3>
+                            <button class="btn-export" onclick="exportChart('humidityChart')">
+                                <i class="ph ph-download-simple"></i> Exportar
+                            </button>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="humidityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h3>Comparativa de Todas las Métricas</h3>
+                            <button class="btn-export" onclick="exportChart('combinedChart')">
+                                <i class="ph ph-download-simple"></i> Exportar
+                            </button>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="combinedChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/historicos.js"></script>
+</body>
+
+</html>

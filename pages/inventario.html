@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="inv-summary" id="invKPIs"></div>
+
+      <div class="ops-tabs" role="tablist">
+        <button type="button" class="active" data-tab="productos">Productos</button>
+        <button type="button" data-tab="movimientos">Movimientos</button>
+        <button type="button" data-tab="solicitudes">Solicitudes</button>
+      </div>
+
+      <section data-panel="productos">
+        <div class="ops-toolbar">
+          <div class="filter-group">
+            <label for="invCategoria">Categoría</label>
+            <select id="invCategoria">
+              <option value="">Todas</option>
+              <option value="semillas">Semillas</option>
+              <option value="nutrientes">Nutrientes</option>
+              <option value="fertilizantes">Fertilizantes</option>
+              <option value="herramientas">Herramientas</option>
+              <option value="repuestos">Repuestos</option>
+              <option value="limpieza">Limpieza</option>
+              <option value="materiales">Materiales</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="checkbox-row"><input type="checkbox" id="invBajoStock"> Solo stock bajo</label>
+          </div>
+          <div class="filter-group">
+            <input type="search" id="invBuscar" placeholder="Buscar producto o código…">
+          </div>
+          <div class="spacer"></div>
+          <button type="button" class="btn-secondary" id="invMovBtn"><i class="ph ph-arrows-down-up"></i> Registrar movimiento</button>
+          <button type="button" class="btn-primary" id="invNewBtn"><i class="ph ph-plus"></i> Nuevo producto</button>
+        </div>
+        <div class="ops-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Ubicación</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody id="invProductBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section data-panel="movimientos" hidden>
+        <div class="ops-toolbar">
+          <div class="filter-group">
+            <label for="movTipo">Tipo</label>
+            <select id="movTipo">
+              <option value="">Todos</option>
+              <option value="entrada">Entrada</option>
+              <option value="salida">Salida</option>
+              <option value="ajuste">Ajuste</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="movProducto">Producto</label>
+            <select id="movProducto"><option value="">Todos</option></select>
+          </div>
+          <div class="filter-group">
+            <label for="movSector">Sector</label>
+            <select id="movSector"><option value="">Todos</option></select>
+          </div>
+          <div class="spacer"></div>
+          <button type="button" class="btn-primary" id="movNewBtn"><i class="ph ph-plus"></i> Registrar movimiento</button>
+        </div>
+        <div class="ops-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Responsable</th><th>Sector</th><th>Motivo</th></tr>
+              </thead>
+              <tbody id="movBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section data-panel="solicitudes" hidden>
+        <div class="ops-toolbar">
+          <div class="filter-group">
+            <label for="solEstado">Estado</label>
+            <select id="solEstado">
+              <option value="">Todos</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobada</option>
+              <option value="rechazada">Rechazada</option>
+            </select>
+          </div>
+          <div class="spacer"></div>
+          <button type="button" class="btn-primary" id="solNewBtn"><i class="ph ph-plus"></i> Solicitar insumos</button>
+        </div>
+        <div class="ops-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Solicitante</th><th>Sector</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody id="solBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="productModalTitle">Nuevo producto</h2>
+        <button type="button" class="btn-close" data-close-modal="productModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="productForm">
+        <input type="hidden" id="productId">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productNombre">Nombre</label>
+            <input type="text" id="productNombre" required maxlength="255">
+          </div>
+          <div class="form-group">
+            <label for="productCodigo">Código</label>
+            <input type="text" id="productCodigo" required maxlength="100">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productCategoria">Categoría</label>
+            <select id="productCategoria">
+              <option value="semillas">Semillas</option>
+              <option value="nutrientes">Nutrientes</option>
+              <option value="fertilizantes">Fertilizantes</option>
+              <option value="herramientas">Herramientas</option>
+              <option value="repuestos">Repuestos</option>
+              <option value="limpieza">Limpieza</option>
+              <option value="materiales">Materiales</option>
+              <option value="otros" selected>Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="productUnidad">Unidad</label>
+            <input type="text" id="productUnidad" required maxlength="30" placeholder="kg, L, unidades…">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productStock">Stock inicial</label>
+            <input type="number" id="productStock" min="0" step="0.01" value="0">
+          </div>
+          <div class="form-group">
+            <label for="productMinimo">Stock mínimo</label>
+            <input type="number" id="productMinimo" min="0" step="0.01" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="productUbicacion">Ubicación</label>
+          <input type="text" id="productUbicacion" maxlength="255" placeholder="Bodega, estante…">
+        </div>
+        <div class="form-group">
+          <label for="productDescripcion">Descripción</label>
+          <textarea id="productDescripcion" rows="2" maxlength="3000"></textarea>
+        </div>
+        <div class="form-group" id="productActivoGroup" hidden>
+          <label class="checkbox-row"><input type="checkbox" id="productActivo" checked> Producto activo</label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="productModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="movementModal" role="dialog" aria-modal="true" aria-labelledby="movementModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="movementModalTitle">Registrar movimiento</h2>
+        <button type="button" class="btn-close" data-close-modal="movementModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="movementForm">
+        <div class="form-group">
+          <label for="movProductoForm">Producto</label>
+          <select id="movProductoForm" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="movTipoForm">Tipo</label>
+            <select id="movTipoForm">
+              <option value="entrada">Entrada</option>
+              <option value="salida">Salida</option>
+              <option value="ajuste">Ajuste de inventario</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="movCantidad">Cantidad</label>
+            <input type="number" id="movCantidad" min="0.01" step="0.01" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="movSectorForm">Sector</label>
+            <select id="movSectorForm"><option value="">Sin sector</option></select>
+          </div>
+          <div class="form-group">
+            <label for="movMotivo">Motivo</label>
+            <input type="text" id="movMotivo" maxlength="2000">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="movementModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="requestModalTitle">Solicitar insumos</h2>
+        <button type="button" class="btn-close" data-close-modal="requestModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="requestForm">
+        <div class="form-group">
+          <label for="solProductoForm">Producto</label>
+          <select id="solProductoForm" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="solCantidad">Cantidad</label>
+            <input type="number" id="solCantidad" min="0.01" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="solSectorForm">Sector</label>
+            <select id="solSectorForm"><option value="">Sin sector</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="solMotivo">Motivo</label>
+          <textarea id="solMotivo" rows="2" maxlength="2000"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="requestModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Enviar solicitud</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="resolveModal" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="resolveModalTitle">Resolver solicitud</h2>
+        <button type="button" class="btn-close" data-close-modal="resolveModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="resolveForm">
+        <input type="hidden" id="resolveId">
+        <p id="resolveInfo" class="ops-muted"></p>
+        <div class="form-group">
+          <label for="resolveEstado">Decisión</label>
+          <select id="resolveEstado">
+            <option value="aprobada">Aprobar y descontar stock</option>
+            <option value="rechazada">Rechazar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="resolveComentario">Comentario</label>
+          <textarea id="resolveComentario" rows="2" maxlength="2000"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="resolveModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/inventario.js"></script>
+</body>
+</html>

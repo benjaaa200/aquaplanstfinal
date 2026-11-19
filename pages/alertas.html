@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alertas | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/alertas.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="ph ph-plant logo-icon"></i>
+                <span class="logo-text">AquaPlants</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="ph ph-squares-four"></i><span>Inicio</span>
+                </a>
+                <a href="cultivos.html" class="nav-link">
+                    <i class="ph ph-plant"></i><span>Cultivos</span>
+                </a>
+                <a href="alertas.html" class="nav-link active">
+                    <i class="ph ph-warning-circle"></i><span>Alertas</span>
+                    <span class="badge" id="nav-alert-badge">0</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="ph ph-sign-out"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="page-title">
+                    <h1>Centro de Alertas</h1>
+                    <p id="role-indicator">Monitoreo de umbrales críticos</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <span class="user-role" id="user-role">Rol</span>
+                    </div>
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Summary Cards -->
+                <section class="summary-grid">
+                    <div class="summary-card critical">
+                        <div class="summary-icon">
+                            <i class="ph ph-warning-octagon"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Críticas</span>
+                            <span class="summary-value" id="critical-count">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card warning">
+                        <div class="summary-icon">
+                            <i class="ph ph-warning"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Advertencias</span>
+                            <span class="summary-value" id="warning-count">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card info">
+                        <div class="summary-icon">
+                            <i class="ph ph-info"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Informativas</span>
+                            <span class="summary-value" id="info-count">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card resolved clickable" role="button" tabindex="0"
+                         title="Ver historial de alertas resueltas"
+                         onclick="focusResolvedArchive()"
+                         onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); focusResolvedArchive(); }">
+                        <div class="summary-icon">
+                            <i class="ph ph-check-circle"></i>
+                        </div>
+                        <div class="summary-data">
+                            <span class="summary-label">Resueltas</span>
+                            <span class="summary-value" id="resolved-count">0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label>Severidad:</label>
+                        <select id="filter-severity" onchange="applyFilters()">
+                            <option value="all">Todas</option>
+                            <option value="critical">Críticas</option>
+                            <option value="warning">Advertencias</option>
+                            <option value="info">Informativas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Tipo:</label>
+                        <select id="filter-type" onchange="applyFilters()">
+                            <option value="all">Todos</option>
+                            <option value="temperatura">Temperatura</option>
+                            <option value="humedad">Humedad</option>
+                            <option value="nivel_agua">Nivel de Agua</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Estado:</label>
+                        <select id="filter-status" onchange="applyFilters()">
+                            <option value="all">Todas</option>
+                            <option value="unread">No leídas</option>
+                            <option value="read">Leídas</option>
+                            <option value="unresolved">Sin resolver</option>
+                            <option value="resolved">Resueltas</option>
+                        </select>
+                    </div>
+                    <button class="btn-mark-all" onclick="markAllAsRead()">
+                        <i class="ph ph-check-square"></i> Marcar todas como leídas
+                    </button>
+                </div>
+
+                <!-- Alerts List -->
+                <div class="alerts-container">
+                    <div class="alerts-list" id="alerts-list">
+                        <div class="loading-state">
+                            <i class="ph ph-spinner ph-spin"></i>
+                            <p>Cargando alertas del sistema...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolved Archive -->
+                <section class="resolved-archive" id="resolved-archive" hidden
+                         aria-label="Historial de alertas resueltas">
+                    <button class="archive-header" type="button" id="archive-toggle"
+                            aria-expanded="true" aria-controls="archive-body" onclick="toggleArchive()">
+                        <span class="archive-title">
+                            <i class="ph ph-archive"></i>
+                            Historial de resueltas
+                            <span class="archive-count" id="resolved-archive-count">0</span>
+                        </span>
+                        <span class="archive-hint">
+                            Las alertas resueltas se archivan aquí
+                            <i class="ph ph-caret-up" id="archive-caret"></i>
+                        </span>
+                    </button>
+                    <div class="archive-body" id="archive-body">
+                        <div class="alerts-list" id="resolved-alerts-list"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/alertas.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalaciones | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/app.css">
+    <style>
+        .stats-grid,.instalaciones-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:20px 0}
+        .instalacion-card{background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:20px}
+        .instalacion-card .card-header,.instalacion-card .card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .instalacion-card .info-grid,.instalacion-card .metrics{display:grid;gap:10px;margin:16px 0}
+        .instalacion-card .metrics{grid-template-columns:repeat(3,1fr);text-align:center}
+        .instalacion-card .metric-value{display:block;font-weight:700;font-size:1.2rem}
+        .instalacion-card .descripcion{color:var(--text-muted,#64748b)}
+    </style>
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+<main class="main-content"><div class="content-wrapper">
+    <div class="toolbar">
+        <a href="../pages/dashboard-admin.html" class="btn-secondary"><i class="ph ph-arrow-left"></i> Volver al panel</a>
+        <a href="dispositivos.html" class="btn-secondary"><i class="ph ph-cpu"></i> Dispositivos</a>
+        <button class="btn-primary" type="button" onclick="openModal('modalInstalacion')"><i class="ph ph-plus"></i> Nueva instalación</button>
+    </div>
+    <section class="stats-grid">
+        <article class="stat-card"><h3>Total de instalaciones</h3><div class="value" id="totalInstalaciones">0</div></article>
+        <article class="stat-card"><h3>Instalaciones activas</h3><div class="value" id="instalacionesActivas">0</div></article>
+        <article class="stat-card"><h3>Dispositivos registrados</h3><div class="value" id="totalDispositivos">0</div></article>
+        <article class="stat-card"><h3>Alertas activas</h3><div class="value" id="alertasActivas">0</div></article>
+    </section>
+    <div class="toolbar">
+        <input id="searchInstalaciones" type="search" placeholder="Buscar por nombre, ubicación o descripción">
+        <select id="filtroEstado" aria-label="Filtrar por estado">
+            <option value="todas">Todos los estados</option><option value="activas">Activas</option><option value="inactivas">Inactivas</option>
+        </select>
+    </div>
+    <section id="instalacionesGrid" class="instalaciones-grid" aria-live="polite"></section>
+</div></main>
+
+<div id="modalInstalacion" class="modal" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+    <div class="modal-content">
+        <div class="modal-header"><h2 id="createTitle">Nueva instalación</h2><button class="btn-close" type="button" onclick="closeModal('modalInstalacion')" aria-label="Cerrar"><i class="ph ph-x"></i></button></div>
+        <form id="newInstalacionForm">
+            <div class="form-group"><label for="nombre">Nombre</label><input id="nombre" required maxlength="255"></div>
+            <div class="form-group"><label for="ubicacion">Ubicación</label><input id="ubicacion" maxlength="255"></div>
+            <div class="form-group"><label for="area">Área (m²)</label><input id="area" type="number" min="0.01" step="0.01"></div>
+            <div class="form-group"><label for="responsable">Responsable</label><select id="responsable"><option value="">Sin responsable</option></select></div>
+            <div class="form-group"><label for="descripcion">Descripción</label><textarea id="descripcion" maxlength="2000"></textarea></div>
+            <div class="modal-footer"><button class="btn-secondary" type="button" onclick="closeModal('modalInstalacion')">Cancelar</button><button class="btn-primary" type="submit">Guardar</button></div>
+        </form>
+    </div>
+</div>
+<div id="modalEditInstalacion" class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal-content">
+        <div class="modal-header"><h2 id="editTitle">Editar instalación</h2><button class="btn-close" type="button" onclick="closeModal('modalEditInstalacion')" aria-label="Cerrar"><i class="ph ph-x"></i></button></div>
+        <form id="editInstalacionForm">
+            <div class="form-group"><label for="editNombre">Nombre</label><input id="editNombre" required maxlength="255"></div>
+            <div class="form-group"><label for="editUbicacion">Ubicación</label><input id="editUbicacion" maxlength="255"></div>
+            <div class="form-group"><label for="editArea">Área (m²)</label><input id="editArea" type="number" min="0.01" step="0.01"></div>
+            <div class="form-group"><label for="editResponsable">Responsable</label><select id="editResponsable"><option value="">Sin responsable</option></select></div>
+            <div class="form-group"><label for="editDescripcion">Descripción</label><textarea id="editDescripcion" maxlength="2000"></textarea></div>
+            <div class="modal-footer"><button class="btn-secondary" type="button" onclick="closeModal('modalEditInstalacion')">Cancelar</button><button class="btn-primary" type="submit">Guardar cambios</button></div>
+        </form>
+    </div>
+</div>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script><script src="../js/layout.js"></script><script src="../js/utils.js"></script><script src="../js/admin-instalaciones.js"></script>
+</body>
+</html>

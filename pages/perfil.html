@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi perfil | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <section class="profile-hero" aria-label="Resumen de la cuenta">
+                <div class="profile-avatar" id="profile-avatar">AP</div>
+                <div class="profile-hero-main">
+                    <h2 id="profile-hero-name">Cargando…</h2>
+                    <p class="profile-hero-sub">
+                        <span id="profile-hero-username">@usuario</span>
+                        <span class="profile-dot">·</span>
+                        <span id="profile-hero-email">correo@ejemplo.cl</span>
+                    </p>
+                    <div class="profile-hero-badges">
+                        <span class="profile-chip profile-chip-role">
+                            <i class="ph ph-identification-badge"></i>
+                            <span id="profile-hero-role">Rol</span>
+                        </span>
+                        <span class="status-badge status-activo" id="profile-hero-status">
+                            <i class="ph ph-check-circle"></i> Activo
+                        </span>
+                        <span class="profile-chip">
+                            <i class="ph ph-seal-check"></i>
+                            Miembro desde <strong id="profile-member-since">—</strong>
+                        </span>
+                    </div>
+                </div>
+                <div class="profile-hero-actions">
+                    <span class="profile-session" id="profile-session">
+                        <i class="ph ph-plug"></i> Sesión activa
+                    </span>
+                    <button type="button" class="btn-secondary" onclick="logout()">
+                        <i class="ph ph-sign-out"></i> Cerrar sesión
+                    </button>
+                </div>
+            </section>
+
+            <section class="profile-stats" aria-label="Resumen de tu actividad">
+                <article class="profile-stat">
+                    <span class="profile-stat-icon green"><i class="ph ph-plant"></i></span>
+                    <div>
+                        <span class="profile-stat-value" id="stat-cultivos">—</span>
+                        <span class="profile-stat-label">Cultivos</span>
+                    </div>
+                </article>
+                <article class="profile-stat">
+                    <span class="profile-stat-icon warning"><i class="ph ph-warning-circle"></i></span>
+                    <div>
+                        <span class="profile-stat-value" id="stat-alertas">—</span>
+                        <span class="profile-stat-label">Alertas pendientes</span>
+                    </div>
+                </article>
+                <article class="profile-stat">
+                    <span class="profile-stat-icon danger"><i class="ph ph-warning-octagon"></i></span>
+                    <div>
+                        <span class="profile-stat-value" id="stat-criticas">—</span>
+                        <span class="profile-stat-label">Alertas críticas</span>
+                    </div>
+                </article>
+                <article class="profile-stat">
+                    <span class="profile-stat-icon info"><i class="ph ph-bell"></i></span>
+                    <div>
+                        <span class="profile-stat-value" id="stat-notificaciones">—</span>
+                        <span class="profile-stat-label">Sin leer</span>
+                    </div>
+                </article>
+            </section>
+
+            <div class="profile-columns">
+                <div class="profile-column">
+                    <section class="card profile-card">
+                        <div class="card-head profile-card-head">
+                            <h2 class="card-title">Datos personales</h2>
+                            <p class="card-subtitle">Mantén actualizado tu contacto de respaldo para recuperar tu cuenta.</p>
+                        </div>
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label for="profile-fullname">Nombre completo</label>
+                                <input type="text" id="profile-fullname" maxlength="255" autocomplete="name" placeholder="Tu nombre">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-email">Email principal</label>
+                                <input type="email" id="profile-email" autocomplete="email" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profile-backup-email">Email de respaldo</label>
+                                    <input type="email" id="profile-backup-email" autocomplete="email" placeholder="opcional">
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-phone">Teléfono de respaldo</label>
+                                    <input type="tel" id="profile-phone" maxlength="32" autocomplete="tel" placeholder="+56 9 1234 5678">
+                                </div>
+                            </div>
+
+                            <dl class="profile-readonly">
+                                <div>
+                                    <dt>Usuario</dt>
+                                    <dd id="profile-username">—</dd>
+                                </div>
+                                <div>
+                                    <dt>Rol</dt>
+                                    <dd id="profile-role">—</dd>
+                                </div>
+                                <div>
+                                    <dt>Último acceso</dt>
+                                    <dd id="profile-last-login">—</dd>
+                                </div>
+                                <div>
+                                    <dt>Estado</dt>
+                                    <dd id="profile-status">—</dd>
+                                </div>
+                            </dl>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">
+                                    <i class="ph ph-floppy-disk"></i> Guardar cambios
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="card profile-card">
+                        <div class="card-head profile-card-head">
+                            <h2 class="card-title">Preferencias</h2>
+                            <p class="card-subtitle">Ajustes guardados en este navegador.</p>
+                        </div>
+                        <div class="pref-row">
+                            <div>
+                                <strong>Tema de la interfaz</strong>
+                                <small>Claro u oscuro.</small>
+                            </div>
+                            <div class="theme-switch" role="group" aria-label="Tema de la interfaz">
+                                <button type="button" data-theme-choice="light">
+                                    <i class="ph ph-sun"></i> Claro
+                                </button>
+                                <button type="button" data-theme-choice="dark">
+                                    <i class="ph ph-moon"></i> Oscuro
+                                </button>
+                            </div>
+                        </div>
+                        <div class="pref-row">
+                            <div>
+                                <strong>Idioma</strong>
+                                <small>Formato de fechas y números.</small>
+                            </div>
+                            <span class="pref-value">Español (Chile)</span>
+                        </div>
+                        <div class="pref-row">
+                            <div>
+                                <strong>Zona horaria</strong>
+                                <small>Detectada automáticamente por tu navegador.</small>
+                            </div>
+                            <span class="pref-value" id="pref-timezone">—</span>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="profile-column">
+                    <section class="card profile-card">
+                        <div class="card-head profile-card-head">
+                            <h2 class="card-title">Seguridad</h2>
+                            <p class="card-subtitle">Revisa tu sesión y actualiza tu contraseña.</p>
+                        </div>
+
+                        <div class="session-box">
+                            <div>
+                                <i class="ph ph-clock-counter-clockwise"></i>
+                                <span>Último acceso</span>
+                                <strong id="security-last-login">—</strong>
+                            </div>
+                            <div>
+                                <i class="ph ph-key"></i>
+                                <span>La sesión expira</span>
+                                <strong id="session-expires">—</strong>
+                            </div>
+                        </div>
+
+                        <p class="profile-mini-title">Cambiar contraseña</p>
+
+                        <form id="password-form">
+                            <div class="form-group">
+                                <label for="current-password">Contraseña actual</label>
+                                <div class="password-field">
+                                    <input type="password" id="current-password" autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle" data-target="current-password" aria-label="Mostrar contraseña">
+                                        <i class="ph ph-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-password">Nueva contraseña</label>
+                                <div class="password-field">
+                                    <input type="password" id="new-password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                                    <button type="button" class="password-toggle" data-target="new-password" aria-label="Mostrar contraseña">
+                                        <i class="ph ph-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="password-strength" hidden>
+                                    <div class="strength-bar"><span id="strength-fill"></span></div>
+                                    <small id="strength-label">—</small>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-password">Confirmar nueva contraseña</label>
+                                <div class="password-field">
+                                    <input type="password" id="confirm-password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                                    <button type="button" class="password-toggle" data-target="confirm-password" aria-label="Mostrar contraseña">
+                                        <i class="ph ph-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">
+                                    <i class="ph ph-lock-key"></i> Actualizar contraseña
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="card profile-card">
+                        <div class="card-head profile-card-head">
+                            <h2 class="card-title">Contactos de escalamiento</h2>
+                            <p class="card-subtitle">Tu supervisor y administración para reportar problemas.</p>
+                        </div>
+                        <div id="contact-list" class="contact-list">
+                            <p class="ops-muted">Cargando contactos…</p>
+                        </div>
+                    </section>
+
+                    <section class="card profile-card">
+                        <div class="card-head profile-card-head">
+                            <h2 class="card-title">Accesos rápidos</h2>
+                            <p class="card-subtitle">Atajos a las secciones que más usas.</p>
+                        </div>
+                        <div class="quick-links">
+                            <a href="dashboard.html">
+                                <i class="ph ph-squares-four"></i>
+                                <span><strong>Inicio</strong><small>Tu operación</small></span>
+                            </a>
+                            <a href="alertas.html">
+                                <i class="ph ph-warning-circle"></i>
+                                <span><strong>Alertas</strong><small>Avisos activos</small></span>
+                            </a>
+                            <a href="cultivos.html">
+                                <i class="ph ph-plant"></i>
+                                <span><strong>Cultivos</strong><small>Tus cultivos</small></span>
+                            </a>
+                            <a href="notificaciones.html">
+                                <i class="ph ph-bell"></i>
+                                <span><strong>Notificaciones</strong><small>Novedades</small></span>
+                            </a>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/perfil.js"></script>
+</body>
+</html>

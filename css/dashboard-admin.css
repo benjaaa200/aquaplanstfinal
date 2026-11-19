@@ -1,0 +1,179 @@
+/* =========================================================
+   AquaPlants · Dashboard Admin
+   Tema unificado con la palette global del proyecto
+   ========================================================= */
+
+:root {
+  --admin-bg: var(--ink-50);
+  --admin-surface: #ffffff;
+  --admin-ink: var(--ink-900);
+  --admin-muted: var(--ink-500);
+  --admin-line: var(--ink-200);
+  --admin-soft: var(--ink-50);
+  --admin-side: #0f172a;
+  --admin-side-ink: #cbd5e1;
+  --admin-side-active: rgba(14, 165, 233, 0.12);
+  --admin-card-radius: 14px;
+}
+
+body {
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+}
+
+.sidebar {
+  background: var(--admin-side);
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo {
+  color: #fff;
+}
+
+.logo i {
+  color: var(--aqua-500);
+}
+
+.logo h1 span {
+  color: var(--leaf-500);
+}
+
+.nav a {
+  color: var(--admin-side-ink);
+  border-radius: 10px;
+}
+
+.nav a:hover {
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+}
+
+.nav a.active {
+  background: linear-gradient(135deg, var(--aqua-50), var(--aqua-100));
+  color: var(--aqua-700);
+  box-shadow: inset 3px 0 0 var(--aqua-500);
+}
+
+.btn-logout {
+  background: rgba(255,255,255,0.05);
+  color: #fecaca;
+}
+
+.btn-logout:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.main {
+  background: var(--admin-bg);
+}
+
+.top h2 {
+  color: var(--admin-ink);
+}
+
+.me {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
+}
+
+.avatar {
+  background: linear-gradient(135deg, var(--aqua-500), var(--leaf-500));
+}
+
+.status {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status.ok {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.status i {
+  color: var(--warning);
+}
+
+.status.ok i {
+  color: var(--success);
+}
+
+.card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
+  border-radius: var(--admin-card-radius);
+}
+
+.btn.primary {
+  background: var(--aqua-500);
+  border-color: var(--aqua-500);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: var(--aqua-600);
+  border-color: var(--aqua-600);
+}
+
+.b-admin {
+  background: var(--aqua-100);
+  color: var(--aqua-700);
+}
+
+.b-supervisor {
+  background: var(--leaf-100);
+  color: var(--leaf-700);
+}
+
+.b-encargado {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+
+.b-alta {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+.b-media {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+
+.b-baja {
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--aqua-700);
+}
+
+.sw[aria-checked="true"] {
+  background: var(--leaf-500);
+}
+
+.alerts li {
+  background: var(--ink-50);
+  border-left: 3px solid var(--aqua-500);
+}
+
+.alerts li.alta {
+  border-left-color: var(--danger);
+}
+
+.alerts li.media {
+  border-left-color: var(--warning);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--ink-900);
+  color: #fff;
+  border-color: var(--ink-900);
+}
+
+.bar i {
+  background: linear-gradient(90deg, var(--aqua-500), var(--leaf-500));
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    background: var(--admin-side);
+  }
+}

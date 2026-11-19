@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incidencias | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar">
+        <div class="filter-group">
+          <label for="incEstado">Estado</label>
+          <select id="incEstado">
+            <option value="">Todos</option>
+            <option value="nueva">Nueva</option>
+            <option value="pendiente_revision">Pendiente de revisión</option>
+            <option value="asignada">Asignada</option>
+            <option value="en_proceso">En proceso</option>
+            <option value="resuelta">Resuelta</option>
+            <option value="cerrada">Cerrada</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="incCategoria">Categoría</label>
+          <select id="incCategoria">
+            <option value="">Todas</option>
+            <option value="riego">Riego</option>
+            <option value="equipos">Equipos</option>
+            <option value="infraestructura">Infraestructura</option>
+            <option value="ambiental">Ambiental</option>
+            <option value="plantas">Plantas</option>
+            <option value="sensores">Sensores</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="incPrioridad">Prioridad</label>
+          <select id="incPrioridad">
+            <option value="">Todas</option>
+            <option value="critica">Crítica</option>
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="incSector">Sector</label>
+          <select id="incSector"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <input type="search" id="incBuscar" placeholder="Buscar incidencia…">
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="incRefresh"><i class="ph ph-arrows-clockwise"></i> Actualizar</button>
+        <button type="button" class="btn-primary" id="incNewBtn"><i class="ph ph-plus"></i> Registrar incidencia</button>
+      </div>
+
+      <div class="ops-grid three" id="incKPIs"></div>
+      <div class="incident-list" id="incList">
+        <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando incidencias…</h3></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="incModal" role="dialog" aria-modal="true" aria-labelledby="incModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="incModalTitle">Registrar incidencia</h2>
+        <button type="button" class="btn-close" data-close-modal="incModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="incForm">
+        <input type="hidden" id="incId">
+        <div class="form-group">
+          <label for="incTitulo">Título</label>
+          <input type="text" id="incTitulo" required maxlength="255" placeholder="Ej: Fuga en la bomba del sector A">
+        </div>
+        <div class="form-group">
+          <label for="incDescripcion">Descripción</label>
+          <textarea id="incDescripcion" rows="4" required maxlength="5000" placeholder="Describe qué ocurrió y qué zonas están afectadas"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="incCategoriaForm">Categoría</label>
+            <select id="incCategoriaForm">
+              <option value="riego">Problemas de riego</option>
+              <option value="equipos">Fallas de equipos</option>
+              <option value="infraestructura">Infraestructura</option>
+              <option value="ambiental">Condiciones ambientales</option>
+              <option value="plantas">Problemas en plantas</option>
+              <option value="sensores">Sensores y dispositivos</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="incPrioridadForm">Prioridad</label>
+            <select id="incPrioridadForm">
+              <option value="baja">Baja</option>
+              <option value="media" selected>Media</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="incSectorForm">Sector afectado</label>
+            <select id="incSectorForm"><option value="">Selecciona un sector</option></select>
+          </div>
+          <div class="form-group">
+            <label for="incCultivoForm">Cultivo relacionado</label>
+            <select id="incCultivoForm"><option value="">Sin cultivo</option></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="incModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Registrar incidencia</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="incDetailModal" role="dialog" aria-modal="true" aria-labelledby="incDetailTitle">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="incDetailTitle">Detalle de incidencia</h2>
+        <button type="button" class="btn-close" data-close-modal="incDetailModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <div id="incDetailBody"><div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando…</h3></div></div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/incidencias.js"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/reportes.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="ph ph-plant logo-icon"></i>
+                <span class="logo-text">AquaPlants</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="ph ph-squares-four"></i><span>Inicio</span>
+                </a>
+                <a href="cultivos.html" class="nav-link">
+                    <i class="ph ph-plant"></i><span>Cultivos</span>
+                </a>
+                <a href="alertas.html" class="nav-link">
+                    <i class="ph ph-warning-circle"></i><span>Alertas</span>
+                </a>
+                <a href="historicos.html" class="nav-link">
+                    <i class="ph ph-chart-line-up"></i><span>Históricos</span>
+                </a>
+                <a href="dispositivos.html" class="nav-link">
+                    <i class="ph ph-cpu"></i><span>Dispositivos</span>
+                </a>
+                <a href="riego.html" class="nav-link">
+                    <i class="ph ph-drop-half-bottom"></i><span>Riego</span>
+                </a>
+                <a href="reportes.html" class="nav-link active">
+                    <i class="ph ph-file-text"></i><span>Reportes</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="ph ph-sign-out"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="page-title">
+                    <h1>Centro de Reportes</h1>
+                    <p id="role-indicator">Generación y exportación de informes</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <span class="user-role" id="user-role">Rol</span>
+                    </div>
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Report Generator Panel -->
+                <div class="report-generator">
+                    <div class="section-header">
+                        <h2><i class="ph ph-magic-wand"></i> Generar Nuevo Reporte</h2>
+                    </div>
+                    <form id="report-form" class="generator-form" onsubmit="handleGenerateReport(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="report-type">Tipo de Reporte</label>
+                                <select id="report-type" name="tipo" required>
+                                    <option value="mediciones">Mediciones IoT</option>
+                                    <option value="alertas">Alertas Generadas</option>
+                                    <option value="riego">Consumo de Riego</option>
+                                    <option value="cultivos">Estado de Cultivos</option>
+                                    <option value="dispositivos">Estado de Dispositivos</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-cultivo">Cultivo</label>
+                                <select id="report-cultivo" name="cultivo_id">
+                                    <option value="all">Todos los cultivos</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="report-start">Fecha Inicio</label>
+                                <input type="date" id="report-start" name="fecha_inicio" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-end">Fecha Fin</label>
+                                <input type="date" id="report-end" name="fecha_fin" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-format">Formato</label>
+                                <select id="report-format" name="formato" required>
+                                    <option value="pdf">PDF</option>
+                                    <option value="excel">Excel (XLSX)</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="previewReport()">
+                                <i class="ph ph-eye"></i> Vista Previa
+                            </button>
+                            <button type="submit" class="btn-primary">
+                                <i class="ph ph-download-simple"></i> Generar y Descargar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Quick Reports -->
+                <div class="quick-reports">
+                    <div class="section-header">
+                        <h2><i class="ph ph-lightning"></i> Reportes Rápidos</h2>
+                    </div>
+                    <div class="quick-grid">
+                        <button class="quick-card" onclick="generateQuickReport('daily')">
+                            <div class="quick-icon bg-cyan">
+                                <i class="ph ph-sun"></i>
+                            </div>
+                            <div class="quick-info">
+                                <h3>Reporte Diario</h3>
+                                <p>Resumen de las últimas 24 horas</p>
+                            </div>
+                        </button>
+                        <button class="quick-card" onclick="generateQuickReport('weekly')">
+                            <div class="quick-icon bg-green">
+                                <i class="ph ph-calendar-blank"></i>
+                            </div>
+                            <div class="quick-info">
+                                <h3>Reporte Semanal</h3>
+                                <p>Últimos 7 días de operación</p>
+                            </div>
+                        </button>
+                        <button class="quick-card" onclick="generateQuickReport('monthly')">
+                            <div class="quick-icon bg-blue">
+                                <i class="ph ph-calendar"></i>
+                            </div>
+                            <div class="quick-info">
+                                <h3>Reporte Mensual</h3>
+                                <p>Últimos 30 días de operación</p>
+                            </div>
+                        </button>
+                        <button class="quick-card" onclick="generateQuickReport('alerts')">
+                            <div class="quick-icon bg-red">
+                                <i class="ph ph-warning-octagon"></i>
+                            </div>
+                            <div class="quick-info">
+                                <h3>Reporte de Alertas</h3>
+                                <p>Todas las alertas del período</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Generated Reports History -->
+                <div class="reports-history">
+                    <div class="section-header">
+                        <h2><i class="ph ph-clock-counter-clockwise"></i> Reportes Generados</h2>
+                        <button class="btn-secondary" onclick="loadReportsHistory()">
+                            <i class="ph ph-arrows-clockwise"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha Generación</th>
+                                    <th>Tipo</th>
+                                    <th>Cultivo</th>
+                                    <th>Período</th>
+                                    <th>Formato</th>
+                                    <th>Tamaño</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading-row">Cargando reportes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Vista Previa -->
+    <div class="modal-overlay" id="preview-modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Vista Previa del Reporte</h2>
+                <button class="btn-close" onclick="closePreviewModal()"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="preview-content" id="preview-content">
+                <div class="loading-state">
+                    <i class="ph ph-spinner ph-spin"></i>
+                    <p>Generando vista previa...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closePreviewModal()">Cerrar</button>
+                <button type="button" class="btn-primary" onclick="downloadFromPreview()">
+                    <i class="ph ph-download-simple"></i> Descargar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/reportes.js"></script>
+</body>
+</html>

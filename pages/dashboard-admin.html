@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <div class="toolbar" style="justify-content: flex-end;">
+                <span class="demo-flag" id="dataMode" hidden></span>
+                <a href="../admin/usuarios.html" class="btn-primary">
+                    <i class="ph ph-user-plus"></i> Gestionar usuarios
+                </a>
+                <a href="../admin/instalaciones.html" class="btn-secondary">
+                    <i class="ph ph-buildings"></i> Instalaciones
+                </a>
+                <a href="../admin/dispositivos.html" class="btn-secondary">
+                    <i class="ph ph-cpu"></i> Dispositivos
+                </a>
+                <a href="cultivos.html" class="btn-secondary">
+                    <i class="ph ph-plant"></i> Ver cultivos
+                </a>
+            </div>
+
+            <section class="stats-grid">
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Usuarios del sistema</h3>
+                        <div class="value" id="totalUsers">—</div>
+                        <div class="change" id="totalUsersHint">Cargando…</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-users"></i></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Cultivos registrados</h3>
+                        <div class="value" id="totalCrops">—</div>
+                        <div class="change" id="totalCropsHint">Cargando…</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-plant"></i></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Alertas pendientes</h3>
+                        <div class="value" id="totalAlerts">—</div>
+                        <div class="change" id="totalAlertsHint">Cargando…</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-bell"></i></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Mediciones recientes</h3>
+                        <div class="value" id="totalMeasurements">—</div>
+                        <div class="change" id="totalMeasurementsHint">Cargando…</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-activity"></i></div>
+                </article>
+            </section>
+
+            <div class="admin-grid">
+                <section class="admin-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Distribución por rol</div>
+                            <div class="card-subtitle">Usuarios activos según su perfil de acceso</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="roleChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="admin-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Estado de cultivos</div>
+                            <div class="card-subtitle">Cantidad de cultivos por estado operativo</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cropsChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <div class="admin-grid">
+                <section class="admin-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Usuarios del sistema</div>
+                            <div class="card-subtitle">Últimos registros disponibles</div>
+                        </div>
+                        <a href="../admin/usuarios.html" class="btn-secondary btn-small">Ver todos</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersList">
+                                <tr><td colspan="4" class="loading-row">Cargando usuarios…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="admin-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Alertas activas</div>
+                            <div class="card-subtitle">Condiciones que requieren revisión</div>
+                        </div>
+                        <a href="alertas.html" class="btn-secondary btn-small">Ver alertas</a>
+                    </div>
+                    <div id="adminAlertsList">
+                        <div class="loading-state">Cargando alertas…</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/dashboard-admin.js"></script>
+</body>
+</html>

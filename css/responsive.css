@@ -1,0 +1,472 @@
+/* Responsive Design */
+
+/* Extra large screens (1200px and up) */
+@media (max-width: 1399px) {
+    .container {
+        padding: 15px;
+    }
+}
+
+/* Large screens (992px to 1199px) */
+@media (max-width: 1199px) {
+    .dashboard-container {
+        grid-template-columns: 220px 1fr;
+    }
+
+    .sidebar {
+        width: 220px;
+    }
+
+    .main-content {
+        margin-left: 220px;
+    }
+
+    .widgets-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Medium screens (768px to 991px) */
+@media (max-width: 991px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        display: flex;
+        padding: 0;
+    }
+
+    .sidebar-header {
+        display: none;
+    }
+
+    .sidebar-menu {
+        display: flex;
+        width: 100%;
+        overflow-x: auto;
+        padding: 0;
+        border-bottom: 1px solid #34495e;
+    }
+
+    .sidebar-menu li {
+        flex-shrink: 0;
+    }
+
+    .sidebar-menu a {
+        white-space: nowrap;
+        padding: 15px 15px;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    .widgets-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .cultivos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .historicos-controls {
+        flex-direction: column;
+    }
+
+    .controls-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .admin-panel {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 100%;
+    }
+}
+
+/* Small screens (576px to 767px) */
+@media (max-width: 767px) {
+    body {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .login-box {
+        padding: 30px 20px;
+        max-width: 100%;
+        width: 95%;
+    }
+
+    .login-box h1 {
+        font-size: 2em;
+    }
+
+    .header {
+        padding: 15px;
+    }
+
+    .header h1 {
+        font-size: 1.3em;
+    }
+
+    .widgets-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .widget-value {
+        font-size: 2em;
+    }
+
+    .cultivos-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .cultivos-header h2 {
+        font-size: 1.3em;
+    }
+
+    .cultivos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cultivo-actions {
+        flex-direction: column;
+    }
+
+    .cultivo-actions button {
+        width: 100%;
+    }
+
+    .alerta-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .alerta-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .alerta-actions button {
+        flex: 1;
+    }
+
+    .historicos-tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-button {
+        padding: 12px 15px;
+        font-size: 0.9em;
+    }
+
+    .historicos-table th,
+    .historicos-table td {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    .admin-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-stat-value {
+        font-size: 2em;
+    }
+
+    .filtros-alertas {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filtro-group {
+        width: 100%;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filtro-group input,
+    .filtro-group select {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .modal-content h3 {
+        font-size: 1.2em;
+    }
+
+    .alert {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 10px;
+    }
+
+    .navbar-menu {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .navbar-menu a {
+        padding: 10px;
+        display: block;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .admin-form {
+        max-width: 100%;
+    }
+
+    .admin-form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .admin-form-actions button {
+        width: 100%;
+    }
+}
+
+/* Extra small screens (less than 576px) */
+@media (max-width: 575px) {
+    body {
+        font-size: 13px;
+    }
+
+    .container {
+        padding: 8px;
+    }
+
+    .login-box {
+        padding: 20px 15px;
+        width: 100%;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .login-box h1 {
+        font-size: 1.5em;
+    }
+
+    .header {
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        font-size: 1.1em;
+    }
+
+    .widget {
+        padding: 15px;
+    }
+
+    .widget-value {
+        font-size: 1.5em;
+    }
+
+    .cultivos-grid {
+        gap: 15px;
+    }
+
+    .cultivo-image {
+        height: 150px;
+        font-size: 2em;
+    }
+
+    .cultivo-content {
+        padding: 15px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+    }
+
+    .alerta-item {
+        padding: 15px;
+        border-left-width: 3px;
+    }
+
+    .alerta-titulo {
+        font-size: 1em;
+    }
+
+    .alerta-mensaje {
+        font-size: 0.9em;
+    }
+
+    .alerta-meta {
+        gap: 10px;
+        font-size: 0.8em;
+    }
+
+    .tab-button {
+        padding: 10px 12px;
+        font-size: 0.85em;
+    }
+
+    .historicos-table,
+    .admin-table {
+        font-size: 0.85em;
+    }
+
+    .historicos-table th,
+    .historicos-table td,
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 5px;
+    }
+
+    .pagination {
+        gap: 2px;
+    }
+
+    .pagination button,
+    .pagination a {
+        padding: 6px 8px;
+        font-size: 0.85em;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px;
+        font-size: 16px; /* Previene zoom en iOS */
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        border-radius: 4px;
+    }
+
+    .card {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .card-title {
+        font-size: 1.1em;
+    }
+
+    .severity-badge {
+        padding: 3px 8px;
+        font-size: 0.8em;
+    }
+}
+
+/* Orientación landscape en dispositivos pequeños */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+        height: auto;
+    }
+
+    .sidebar-menu {
+        display: flex;
+        overflow-x: auto;
+    }
+
+    .login-box {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+    }
+}
+
+/* Impresión */
+@media print {
+    .navbar,
+    .sidebar,
+    .admin-actions,
+    .filtros-alertas,
+    .export-buttons,
+    .modal {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    body {
+        background: white;
+    }
+
+    .card,
+    .alerta-item,
+    .cultivo-card {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    table {
+        page-break-inside: avoid;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tfoot {
+        display: table-footer-group;
+    }
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <div class="toolbar" style="justify-content: flex-end;">
+                <span id="dataMode" hidden style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:#FBF2E2;color:#B7791F;font-size:11px;font-weight:700;"></span>
+                <div class="filter-group">
+                    <label>Periodo:</label>
+                    <select id="period-select" aria-label="Periodo de análisis">
+                        <option value="24h">Últimas 24 horas</option>
+                        <option value="7d">Últimos 7 días</option>
+                        <option value="30d">Últimos 30 días</option>
+                        <option value="all" selected>Todo el historial</option>
+                    </select>
+                </div>
+            </div>
+
+            <section class="stats-grid">
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Temperatura</h3>
+                        <div class="value" id="kpi-temp">—</div>
+                        <div class="change" id="kpi-temp-hint">Sin datos</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-thermometer"></i></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Humedad ambiental</h3>
+                        <div class="value" id="kpi-humidity">—</div>
+                        <div class="change" id="kpi-humidity-hint">Sin datos</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-drop"></i></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Nivel de agua</h3>
+                        <div class="value" id="kpi-water">—</div>
+                        <div class="change" id="kpi-water-hint">Sin datos</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-waves"></i></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3>Alertas pendientes</h3>
+                        <div class="value" id="kpi-alerts">—</div>
+                        <div class="change" id="kpi-alerts-hint">Sin datos</div>
+                    </div>
+                    <div class="stat-icon"><i class="ph ph-bell"></i></div>
+                </article>
+            </section>
+
+            <section class="health-card">
+                <div class="card-head" style="margin-bottom: 10px;">
+                    <div>
+                        <div class="card-title">Salud general del sistema</div>
+                        <div class="card-subtitle">Cálculo basado en los últimos indicadores registrados</div>
+                    </div>
+                    <span class="status-badge" id="healthScoreLabel">Calculando…</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                    <span class="stat-value" id="healthScoreValue">—</span>
+                    <span style="color:var(--g-muted);font-size:12px;">/ 100</span>
+                </div>
+                <div style="height:10px;background:var(--g-border);border-radius:999px;overflow:hidden;margin-top:14px;">
+                    <div id="healthScoreFill" style="height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,var(--g-green),var(--g-accent));transition:width .7s ease;"></div>
+                </div>
+            </section>
+
+            <div class="charts-grid">
+                <section class="chart-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Temperatura</div>
+                            <div class="card-subtitle" id="tempChartSub">Evolución en el periodo seleccionado</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="chart-card">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">Humedad y nivel de agua</div>
+                            <div class="card-subtitle" id="humChartSub">Evolución en el periodo seleccionado</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="humChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <section class="card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-title">Últimas mediciones</div>
+                        <div class="card-subtitle">Registros recibidos desde los sensores IoT</div>
+                    </div>
+                    <a href="historicos.html" class="btn-secondary btn-small">Ver históricos</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cultivo</th>
+                                <th>Temperatura</th>
+                                <th>Humedad</th>
+                                <th>Nivel de agua</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="measurements-table-body">
+                            <tr><td colspan="6" class="loading-row">Cargando mediciones…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/dashboard-main.js"></script>
+</body>
+</html>

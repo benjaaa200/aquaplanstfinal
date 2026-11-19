@@ -1,0 +1,342 @@
+/* =========================================================
+   AquaPlants · Dashboard Supervisor - Estilos específicos
+   ========================================================= */
+
+/* ============ KPI CARDS ============ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: #fff;
+  border: 1px solid var(--ink-100);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: all .25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--aqua-500), var(--leaf-500));
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+.kpi-card:hover {
+  border-color: var(--aqua-200);
+  box-shadow: 0 8px 20px rgba(143,169,143,.1);
+  transform: translateY(-2px);
+}
+
+.kpi-card:hover::before {
+  opacity: 1;
+}
+
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon.cyan {
+  background: linear-gradient(135deg, var(--aqua-100), var(--aqua-50));
+  color: var(--aqua-700);
+}
+
+.kpi-icon.green {
+  background: linear-gradient(135deg, #E5EBDD, #EDF2E6);
+  color: var(--leaf-600);
+}
+
+.kpi-icon.red {
+  background: linear-gradient(135deg, #F3E1D9, #F7EBE4);
+  color: #8F5038;
+}
+
+.kpi-icon.amber {
+  background: linear-gradient(135deg, #F4E8D4, #fffbeb);
+  color: #7A5626;
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--ink-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink-900);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.kpi-trend {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kpi-trend.up {
+  color: var(--leaf-600);
+}
+
+.kpi-trend.down {
+  color: var(--danger);
+}
+
+/* ============ ALERTAS ============ */
+.alert-item {
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid;
+  transition: all .2s ease;
+}
+
+.alert-item:hover {
+  transform: translateX(4px);
+}
+
+.alert-item.warning {
+  background: #fffbeb;
+  border-color: #E9D6B4;
+  color: #7A5626;
+}
+
+.alert-item.danger {
+  background: #F7EBE4;
+  border-color: #E9C9BC;
+  color: #7E4632;
+}
+
+.alert-item .alert-content {
+  flex: 1;
+}
+
+.alert-item .alert-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.alert-item .alert-meta {
+  font-size: 12px;
+  opacity: .85;
+  margin-top: 4px;
+}
+
+.alert-item .alert-time {
+  font-size: 11px;
+  opacity: .7;
+  margin-top: 6px;
+}
+
+/* ============ INSTALACIONES ============ */
+.instalacion-card {
+  padding: 20px;
+  border: 1px solid var(--ink-100);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  background: #fff;
+  transition: all .2s ease;
+}
+
+.instalacion-card:hover {
+  border-color: var(--aqua-200);
+  box-shadow: 0 4px 12px rgba(143,169,143,.08);
+}
+
+.instalacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-100);
+}
+
+.instalacion-header h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 4px;
+}
+
+.instalacion-header .meta {
+  font-size: 12px;
+  color: var(--ink-500);
+}
+
+.instalacion-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stat {
+  background: var(--ink-50);
+  padding: 14px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.stat-value.warning {
+  color: var(--warning);
+}
+
+/* ============ BADGES ============ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+.badge.success {
+  background: #E5EBDD;
+  color: var(--resolved);
+}
+
+.badge.warning {
+  background: #F4E8D4;
+  color: #7A5626;
+}
+
+.badge.danger {
+  background: #F3E1D9;
+  color: #7E4632;
+}
+
+/* ============ TABLA ============ */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--ink-100);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+thead {
+  background: var(--ink-50);
+}
+
+th {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--ink-100);
+}
+
+td {
+  padding: 16px 14px;
+  font-size: 14px;
+  color: var(--ink-700);
+  border-bottom: 1px solid var(--ink-100);
+}
+
+tbody tr:hover {
+  background: var(--ink-50);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .instalacion-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  
+  .instalacion-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .instalacion-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  table {
+    font-size: 13px;
+  }
+  
+  th, td {
+    padding: 12px 10px;
+  }
+}

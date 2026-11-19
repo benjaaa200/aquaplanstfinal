@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rendimiento | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar">
+        <div class="filter-group">
+          <label for="perfInicio">Desde</label>
+          <input type="date" id="perfInicio">
+        </div>
+        <div class="filter-group">
+          <label for="perfFin">Hasta</label>
+          <input type="date" id="perfFin">
+        </div>
+        <div class="filter-group">
+          <label for="perfSector">Sector</label>
+          <select id="perfSector"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="perfCultivo">Cultivo</label>
+          <select id="perfCultivo"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="perfResponsable">Responsable</label>
+          <select id="perfResponsable"><option value="">Todos</option></select>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="perfPrint"><i class="ph ph-printer"></i> PDF</button>
+        <button type="button" class="btn-secondary" id="perfExport"><i class="ph ph-download-simple"></i> CSV</button>
+        <button type="button" class="btn-primary" id="perfRefresh"><i class="ph ph-chart-line-up"></i> Actualizar</button>
+      </div>
+
+      <div class="perf-hero">
+        <h2>Informe de rendimiento</h2>
+        <p id="perfPeriodo">Calculado a partir de tareas, incidencias, mantenimientos, inspecciones y consumo de insumos registrados en AquaPlants.</p>
+        <ul id="perfResumen"></ul>
+      </div>
+
+      <div class="ops-grid four" id="perfKPIs"></div>
+
+      <div class="ops-grid two" style="margin-top:18px">
+        <div class="ops-card">
+          <div class="ops-card-head"><h3>Evolución mensual</h3></div>
+          <canvas id="perfChart" height="240"></canvas>
+        </div>
+        <div class="ops-card">
+          <div class="ops-card-head"><h3>Actividad por sector</h3></div>
+          <div class="perf-bars" id="perfSectorBars"></div>
+        </div>
+      </div>
+
+      <div class="ops-card" style="margin-top:18px">
+        <div class="ops-card-head"><h3>Detalle por sector</h3><span class="ops-small" id="perfTablaInfo"></span></div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Sector</th><th>Cultivos</th><th>Tareas</th><th>Completadas</th>
+                <th>Incidencias</th><th>Resueltas</th><th>Eventos</th><th>Consumo</th>
+              </tr>
+            </thead>
+            <tbody id="perfTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/rendimiento.js"></script>
+</body>
+</html>

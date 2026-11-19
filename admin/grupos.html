@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grupos de trabajo | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/grupos.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css">
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar">
+        <div class="filter-group">
+          <label for="groupSearch">Buscar</label>
+          <input type="search" id="groupSearch" placeholder="Grupo, supervisor o encargado" autocomplete="off">
+        </div>
+        <div class="filter-group">
+          <label for="groupSupervisorFilter">Supervisor</label>
+          <select id="groupSupervisorFilter"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="groupStatusFilter">Estado</label>
+          <select id="groupStatusFilter">
+            <option value="">Todos</option>
+            <option value="1">Activos</option>
+            <option value="0">Inactivos</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="btn-secondary" id="groupRefreshBtn">
+          <i class="ph ph-arrows-clockwise"></i> Actualizar
+        </button>
+        <button type="button" class="btn-primary" id="groupNewBtn">
+          <i class="ph ph-plus"></i> Nuevo grupo
+        </button>
+      </div>
+
+      <div class="ops-grid four" id="groupKPIs"></div>
+
+      <div class="group-grid" id="groupsGrid">
+        <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando grupos...</h3></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="groupModalTitle">Nuevo grupo de trabajo</h2>
+        <button type="button" class="btn-close" data-close-modal="groupModal" aria-label="Cerrar">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <form id="groupForm">
+        <input type="hidden" id="groupId">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="groupNombre">Nombre del grupo</label>
+            <input type="text" id="groupNombre" required minlength="2" maxlength="255" placeholder="Ej: Equipo de riego norte">
+          </div>
+          <div class="form-group">
+            <label for="groupSupervisor">Supervisor responsable</label>
+            <select id="groupSupervisor" required><option value="">Selecciona un supervisor</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="groupDescripcion">Descripción</label>
+          <textarea id="groupDescripcion" rows="2" maxlength="3000" placeholder="Objetivo del grupo, turno o zona de trabajo"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="groupColor">Color de identificación</label>
+            <div class="group-color-row">
+              <input type="color" id="groupColor" value="#5E7A55">
+              <span class="ops-small">Se usa como acento visual del grupo.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="groupActivo" checked> Grupo activo
+            </label>
+          </div>
+        </div>
+
+        <div class="group-members-picker">
+          <div class="group-members-head">
+            <div>
+              <label for="groupMemberSearch">Encargados del grupo</label>
+              <div class="ops-small" id="groupMemberCount">0 seleccionados</div>
+            </div>
+            <input type="search" id="groupMemberSearch" placeholder="Filtrar encargados" autocomplete="off">
+          </div>
+          <div class="group-member-options" id="groupMemberOptions">
+            <div class="ops-muted">Cargando encargados...</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="groupModal">Cancelar</button>
+          <button type="submit" class="btn-primary" id="groupSaveBtn">Guardar grupo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="groupDetailModal" role="dialog" aria-modal="true" aria-labelledby="groupDetailTitle">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="groupDetailTitle">Detalle del grupo</h2>
+        <button type="button" class="btn-close" data-close-modal="groupDetailModal" aria-label="Cerrar">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div id="groupDetailBody">
+        <div class="ops-empty"><i class="ph ph-circle-notch"></i><h3>Cargando...</h3></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/admin-grupos.js"></script>
+</body>
+</html>

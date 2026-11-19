@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa de Instalaciones | AquaPlants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/ops.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="ops-toolbar map-toolbar">
+        <div class="filter-group">
+          <label for="mapEstado">Estado</label>
+          <select id="mapEstado">
+            <option value="">Todos</option>
+            <option value="activas">Activas</option>
+            <option value="inactivas">Inactivas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="mapTipo">Cultivo</label>
+          <select id="mapTipo"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-group map-search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" id="mapBuscar" placeholder="Buscar sector, ubicación o responsable…" aria-label="Buscar sector">
+        </div>
+        <button type="button" class="btn-ghost btn-small" id="mapReset" title="Quitar filtros"><i class="ph ph-funnel"></i> Limpiar</button>
+        <div class="spacer"></div>
+        <span class="map-updated" id="mapUpdated" aria-live="polite"></span>
+        <button type="button" class="btn-secondary btn-small" id="mapAutoBtn" hidden title="Reorganizar sectores sin superposiciones"><i class="ph ph-magic-wand"></i> Ordenar</button>
+        <button type="button" class="btn-secondary btn-small" id="mapRefresh"><i class="ph ph-arrows-clockwise"></i> Actualizar</button>
+        <button type="button" class="btn-primary btn-small" id="mapConfigBtn" hidden><i class="ph ph-sliders-horizontal"></i> Editar distribución</button>
+      </div>
+
+      <div class="ops-grid four" id="mapKPIs"></div>
+
+      <div class="map-layout">
+        <section class="ops-card map-card" id="mapCard">
+          <div class="ops-card-head">
+            <div>
+              <h2>Vista general de instalaciones</h2>
+              <div class="ops-muted" id="mapHint">Selecciona un sector para consultar su estado y detalle operativo.</div>
+            </div>
+            <div class="map-view-controls">
+              <span class="map-drag-hint" id="mapDragHint" hidden><i class="ph ph-hand-grabbing"></i> Arrastra para mover</span>
+              <div class="map-zoom" role="group" aria-label="Densidad del mapa">
+                <button type="button" data-density="compacta" title="Densidad compacta" aria-label="Densidad compacta" aria-pressed="false"><i class="ph ph-minus"></i></button>
+                <button type="button" data-density="normal" title="Densidad normal" aria-label="Densidad normal" aria-pressed="false"><i class="ph ph-equals"></i></button>
+                <button type="button" data-density="comoda" title="Densidad cómoda" aria-label="Densidad cómoda" aria-pressed="false"><i class="ph ph-plus"></i></button>
+              </div>
+              <button type="button" class="icon-btn" id="mapFullscreen" title="Pantalla completa" aria-label="Pantalla completa"><i class="ph ph-arrows-out"></i></button>
+            </div>
+          </div>
+
+          <div class="map-overlap" id="mapOverlap" hidden></div>
+
+          <div class="map-canvas is-empty" id="mapCanvas" data-density="normal">
+            <div class="ops-empty"><i class="ph ph-map-trifold"></i><h3>Cargando mapa…</h3></div>
+          </div>
+          <div class="map-legend" id="mapLegend"></div>
+        </section>
+
+        <aside class="ops-card map-detail" id="mapDetail">
+          <div class="detail-empty">
+            <div class="detail-empty-icon"><i class="ph ph-hand-pointing"></i></div>
+            <h3>Sin sector seleccionado</h3>
+            <p>Elige una zona del mapa para ver su información operativa.</p>
+            <div class="detail-empty-hints">
+              <span><i class="ph ph-cursor-click"></i> Haz clic en una zona</span>
+              <span><i class="ph ph-funnel"></i> Filtra por estado o cultivo</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="mapConfigModal" role="dialog" aria-modal="true" aria-labelledby="mapConfigTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="mapConfigTitle">Editar distribución del sector</h2>
+        <button type="button" class="btn-close" data-close-modal="mapConfigModal" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="mapConfigForm">
+        <div class="form-row">
+          <div class="form-group"><label for="cfgX">Posición X</label><input type="number" id="cfgX" min="0" max="11" required></div>
+          <div class="form-group"><label for="cfgY">Posición Y</label><input type="number" id="cfgY" min="0" max="50" required></div>
+        </div>
+        <div class="ops-small" style="margin:-6px 0 14px">La cuadrícula tiene 12 columnas. Usa X entre 0 y 11 y procura que X + ancho no supere 12.</div>
+        <div class="form-row">
+          <div class="form-group"><label for="cfgAncho">Ancho (columnas)</label><input type="number" id="cfgAncho" min="1" max="12" required></div>
+          <div class="form-group"><label for="cfgAlto">Alto (filas)</label><input type="number" id="cfgAlto" min="1" max="12" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfgTipo">Tipo de sector</label>
+            <select id="cfgTipo">
+              <option value="cultivo">Zona de cultivo</option>
+              <option value="deposito">Depósito</option>
+              <option value="bomba">Bomba</option>
+              <option value="trabajo">Área de trabajo</option>
+              <option value="almacen">Almacén</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group"><label for="cfgColor">Color</label><input type="color" id="cfgColor" value="#5E7A55" style="height:42px"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="mapConfigModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar distribución</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ops-common.js"></script>
+  <script src="../js/mapa.js"></script>
+</body>
+</html>

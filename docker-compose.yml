@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-aquaplants}
+      POSTGRES_USER: ${DB_USER:-aquaplants}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Configura DB_PASSWORD en .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-aquaplants}
+      DB_PASSWORD: ${DB_PASSWORD:?Configura DB_PASSWORD en .env}
+      DB_NAME: ${DB_NAME:-aquaplants}
+      DB_SSLMODE: disable
+      DB_SSLROOTCERT: ""
+      SECRET_KEY: ${SECRET_KEY:?Configura SECRET_KEY en .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5500}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5500}
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "5500:80"
+
+volumes:
+  pgdata:

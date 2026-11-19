@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultivos | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/cultivos.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar (Mismo que dashboard para consistencia) -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="ph ph-plant logo-icon"></i>
+                <span class="logo-text">AquaPlants</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="ph ph-squares-four"></i><span>Inicio</span>
+                </a>
+                <a href="cultivos.html" class="nav-link active">
+                    <i class="ph ph-plant"></i><span>Cultivos</span>
+                </a>
+                <a href="alertas.html" class="nav-link">
+                    <i class="ph ph-warning-circle"></i><span>Alertas</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="ph ph-sign-out"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="page-title">
+                    <h1>Gestión de Cultivos</h1>
+                    <p id="role-indicator">Cargando permisos...</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <span class="user-role" id="user-role">Rol</span>
+                    </div>
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i class="ph ph-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="Buscar por nombre o ubicación...">
+                    </div>
+                    <button class="btn-primary" id="btn-new-crop" onclick="openModal()">
+                        <i class="ph ph-plus-circle"></i> Nuevo Cultivo
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre del Cultivo</th>
+                                <th>Ubicación</th>
+                                <th>Fecha de Inicio</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crops-table-body">
+                            <tr><td colspan="6" class="loading-row">Cargando cultivos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Nuevo Cultivo -->
+    <div class="modal-overlay" id="crop-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registrar Nuevo Cultivo</h2>
+                <button class="btn-close" onclick="closeModal()"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="crop-form" onsubmit="handleCreateCrop(event)">
+                <div class="form-group">
+                    <label for="crop-name">Nombre del Cultivo</label>
+                    <input type="text" id="crop-name" name="nombre" required placeholder="Ej: Lechuga Hidropónica A">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crop-location">Ubicación</label>
+                        <input type="text" id="crop-location" name="ubicacion" required placeholder="Ej: Invernadero 1">
+                    </div>
+                    <div class="form-group" id="crop-installation-group" hidden>
+                        <label for="crop-installation">Instalación</label>
+                        <select id="crop-installation" name="instalacion_id">
+                            <option value="">Sin asignar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="crop-start">Fecha de Inicio</label>
+                        <input type="date" id="crop-start" name="fecha_inicio" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar Cultivo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/cultivos.js"></script>
+</body>
+</html>

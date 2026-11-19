@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispositivos | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+<main class="main-content"><div class="content-wrapper">
+    <div class="toolbar">
+        <a href="instalaciones.html" class="btn-secondary"><i class="ph ph-arrow-left"></i> Instalaciones</a>
+        <a href="../pages/dashboard-admin.html" class="btn-secondary">Volver al panel</a>
+        <button id="btnRefresh" type="button" class="btn-secondary" aria-label="Actualizar"><i class="ph ph-arrows-clockwise"></i></button>
+        <button type="button" class="btn-primary" onclick="openModal('modalDispositivo')"><i class="ph ph-plus"></i> Registrar dispositivo</button>
+    </div>
+    <div class="toolbar">
+        <input id="searchDispositivos" type="search" placeholder="Buscar por nombre, modelo, MAC o IP">
+        <select id="filtroInstalacion" aria-label="Filtrar por instalación"><option value="">Todas las instalaciones</option></select>
+    </div>
+    <div class="table-container">
+        <table class="data-table">
+            <thead><tr><th>Dispositivo</th><th>Tipo</th><th>Instalación</th><th>Estado</th><th>Última conexión</th><th>IP / puerto</th><th>MAC</th><th>Acciones</th></tr></thead>
+            <tbody id="dispositivosTableBody"><tr><td colspan="8">Cargando dispositivos…</td></tr></tbody>
+        </table>
+    </div>
+</div></main>
+<div id="modalDispositivo" class="modal" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+    <div class="modal-content">
+        <div class="modal-header"><h2 id="createTitle">Registrar dispositivo</h2><button class="btn-close" type="button" onclick="closeModal('modalDispositivo')" aria-label="Cerrar"><i class="ph ph-x"></i></button></div>
+        <form id="newDispositivoForm">
+            <div class="form-group"><label for="nombre">Nombre</label><input id="nombre" required maxlength="255"></div>
+            <div class="form-group"><label for="tipo">Tipo</label><select id="tipo" required><option value="sensor">Sensor</option><option value="actuador">Actuador</option><option value="controlador">Controlador</option></select></div>
+            <div class="form-group"><label for="modelo">Modelo</label><input id="modelo" maxlength="150"></div>
+            <div class="form-group"><label for="macAddress">Dirección MAC</label><input id="macAddress" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17"></div>
+            <div class="form-group"><label for="ipAddress">Dirección IP / host</label><input id="ipAddress" placeholder="192.168.1.50" maxlength="253"></div>
+            <div class="form-group"><label for="puerto">Puerto TCP</label><input id="puerto" type="number" min="1" max="65535" value="80"></div>
+            <div class="form-group"><label for="instalacion">Instalación</label><select id="instalacion"><option value="">Sin asignar</option></select></div>
+            <div class="form-group"><label for="descripcion">Descripción</label><textarea id="descripcion" maxlength="2000"></textarea></div>
+            <div class="modal-footer"><button class="btn-secondary" type="button" onclick="closeModal('modalDispositivo')">Cancelar</button><button class="btn-primary" type="submit">Guardar</button></div>
+        </form>
+    </div>
+</div>
+<div id="modalEditDispositivo" class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal-content">
+        <div class="modal-header"><h2 id="editTitle">Editar dispositivo</h2><button class="btn-close" type="button" onclick="closeModal('modalEditDispositivo')" aria-label="Cerrar"><i class="ph ph-x"></i></button></div>
+        <form id="editDispositivoForm">
+            <div class="form-group"><label for="editNombre">Nombre</label><input id="editNombre" required maxlength="255"></div>
+            <div class="form-group"><label for="editTipo">Tipo</label><select id="editTipo" required><option value="sensor">Sensor</option><option value="actuador">Actuador</option><option value="controlador">Controlador</option></select></div>
+            <div class="form-group"><label for="editModelo">Modelo</label><input id="editModelo" maxlength="150"></div>
+            <div class="form-group"><label for="editMacAddress">Dirección MAC</label><input id="editMacAddress" maxlength="17" placeholder="AA:BB:CC:DD:EE:FF"></div>
+            <div class="form-group"><label for="editIpAddress">Dirección IP / host</label><input id="editIpAddress" maxlength="253" placeholder="192.168.1.50"></div>
+            <div class="form-group"><label for="editPuerto">Puerto TCP</label><input id="editPuerto" type="number" min="1" max="65535" value="80"></div>
+            <div class="form-group"><label for="editInstalacion">Instalación</label><select id="editInstalacion"><option value="">Sin asignar</option></select></div>
+            <div class="form-group"><label for="editDescripcion">Descripción</label><textarea id="editDescripcion" maxlength="2000"></textarea></div>
+            <div class="modal-footer"><button class="btn-secondary" type="button" onclick="closeModal('modalEditDispositivo')">Cancelar</button><button class="btn-primary" type="submit">Guardar cambios</button></div>
+        </form>
+    </div>
+</div>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script><script src="../js/layout.js"></script><script src="../js/utils.js"></script><script src="../js/admin-dispositivos.js"></script>
+</body>
+</html>

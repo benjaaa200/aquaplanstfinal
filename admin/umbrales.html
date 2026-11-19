@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umbrales | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="ph ph-funnel"></i>
+                    <select id="filterVariable" aria-label="Filtrar por variable">
+                        <option value="">Todas las variables</option>
+                        <option value="temperatura">Temperatura</option>
+                        <option value="humedad">Humedad</option>
+                        <option value="nivel_agua">Nivel de agua</option>
+                        <option value="ph">pH</option>
+                        <option value="conductividad">Conductividad</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <a href="../pages/dashboard-admin.html" class="btn-secondary">
+                        <i class="ph ph-arrow-left"></i> Volver al panel
+                    </a>
+                    <button type="button" class="btn-primary" onclick="openUmbralModal()">
+                        <i class="ph ph-plus"></i> Nuevo umbral
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Nombre</th>
+                            <th>Rango</th>
+                            <th>Alcance</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="umbralesTableBody">
+                        <tr><td colspan="6" class="loading-row">Cargando umbrales…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="umbralModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="umbralModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="umbralModalTitle">Nuevo umbral</h2>
+                <button type="button" class="btn-close" onclick="closeUmbralModal()" aria-label="Cerrar">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <form id="umbralForm">
+                <input type="hidden" id="umbralId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="variable">Variable</label>
+                        <select id="variable" required>
+                            <option value="temperatura">Temperatura</option>
+                            <option value="humedad">Humedad</option>
+                            <option value="nivel_agua">Nivel de agua</option>
+                            <option value="ph">pH</option>
+                            <option value="conductividad">Conductividad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" id="nombre" required maxlength="150" placeholder="Ej: Temperatura máxima">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="unidad">Unidad</label>
+                        <input type="text" id="unidad" maxlength="20" placeholder="°C, %, µS/cm">
+                    </div>
+                    <div class="form-group">
+                        <label for="valorAlerta">Valor de alerta (opcional)</label>
+                        <input type="number" step="any" id="valorAlerta">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="valorMinimo">Valor mínimo</label>
+                        <input type="number" step="any" id="valorMinimo">
+                    </div>
+                    <div class="form-group">
+                        <label for="valorMaximo">Valor máximo</label>
+                        <input type="number" step="any" id="valorMaximo">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="instalacionId">Instalación (opcional)</label>
+                        <select id="instalacionId">
+                            <option value="">Global</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cultivoId">Cultivo (opcional)</label>
+                        <select id="cultivoId">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" rows="3" maxlength="2000" placeholder="Describe el propósito del umbral"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="activo" checked> Umbral activo
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeUmbralModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="umbralSubmit">Guardar umbral</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/admin-umbrales.js"></script>
+</body>
+</html>

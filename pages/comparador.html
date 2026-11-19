@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js para gráficos comparativos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="../css/comparador.css">
+    <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="ph ph-plant logo-icon"></i>
+                <span class="logo-text">AquaPlants</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="ph ph-squares-four"></i><span>Inicio</span>
+                </a>
+                <a href="cultivos.html" class="nav-link">
+                    <i class="ph ph-plant"></i><span>Cultivos</span>
+                </a>
+                <a href="alertas.html" class="nav-link">
+                    <i class="ph ph-warning-circle"></i><span>Alertas</span>
+                </a>
+                <a href="historicos.html" class="nav-link">
+                    <i class="ph ph-chart-line-up"></i><span>Históricos</span>
+                </a>
+                <a href="dispositivos.html" class="nav-link">
+                    <i class="ph ph-cpu"></i><span>Dispositivos</span>
+                </a>
+                <a href="riego.html" class="nav-link">
+                    <i class="ph ph-drop-half-bottom"></i><span>Riego</span>
+                </a>
+                <a href="reportes.html" class="nav-link">
+                    <i class="ph ph-file-text"></i><span>Reportes</span>
+                </a>
+                <a href="comparador.html" class="nav-link active">
+                    <i class="ph ph-scales"></i><span>Comparador</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="ph ph-sign-out"></i><span>Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-navbar">
+                <div class="page-title">
+                    <h1>Comparador de Cultivos</h1>
+                    <p id="role-indicator">Análisis comparativo entre instalaciones</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <span class="user-role" id="user-role">Rol</span>
+                    </div>
+                    <div class="avatar"><i class="ph ph-user"></i></div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Control Panel -->
+                <div class="control-panel">
+                    <div class="section-header">
+                        <h2><i class="ph ph-sliders-horizontal"></i> Configuración de Comparación</h2>
+                        <button class="btn-secondary" onclick="resetComparison()">
+                            <i class="ph ph-arrow-counter-clockwise"></i> Reiniciar
+                        </button>
+                    </div>
+
+                    <div class="control-grid">
+                        <!-- Selector de Cultivos -->
+                        <div class="control-card">
+                            <div class="control-header">
+                                <i class="ph ph-plant"></i>
+                                <h3>Seleccionar Cultivos</h3>
+                                <span class="control-badge" id="selected-count">0/4</span>
+                            </div>
+                            <div class="cultivo-selector" id="cultivo-selector">
+                                <div class="loading-state">
+                                    <i class="ph ph-spinner ph-spin"></i>
+                                    <p>Cargando cultivos...</p>
+                                </div>
+                            </div>
+                            <p class="control-hint">Selecciona entre 2 y 4 cultivos para comparar</p>
+                        </div>
+
+                        <!-- Selector de Métricas -->
+                        <div class="control-card">
+                            <div class="control-header">
+                                <i class="ph ph-chart-bar"></i>
+                                <h3>Métricas a Comparar</h3>
+                            </div>
+                            <div class="metric-checkboxes">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="metric" value="temperatura" checked>
+                                    <span class="checkmark bg-cyan"></span>
+                                    <div class="checkbox-info">
+                                        <span class="checkbox-label">Temperatura</span>
+                                        <span class="checkbox-unit">°C</span>
+                                    </div>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="metric" value="humedad" checked>
+                                    <span class="checkmark bg-green"></span>
+                                    <div class="checkbox-info">
+                                        <span class="checkbox-label">Humedad</span>
+                                        <span class="checkbox-unit">%</span>
+                                    </div>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="metric" value="nivel_agua" checked>
+                                    <span class="checkmark bg-blue"></span>
+                                    <div class="checkbox-info">
+                                        <span class="checkbox-label">Nivel de Agua</span>
+                                        <span class="checkbox-unit">%</span>
+                                    </div>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="metric" value="ph">
+                                    <span class="checkmark bg-purple"></span>
+                                    <div class="checkbox-info">
+                                        <span class="checkbox-label">pH</span>
+                                        <span class="checkbox-unit">pH</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Selector de Período -->
+                        <div class="control-card">
+                            <div class="control-header">
+                                <i class="ph ph-calendar-blank"></i>
+                                <h3>Período de Análisis</h3>
+                            </div>
+                            <div class="period-selector">
+                                <button class="period-btn active" data-period="24h" onclick="setPeriod('24h')">
+                                    <i class="ph ph-clock"></i> 24h
+                                </button>
+                                <button class="period-btn" data-period="7d" onclick="setPeriod('7d')">
+                                    <i class="ph ph-calendar-blank"></i> 7 días
+                                </button>
+                                <button class="period-btn" data-period="30d" onclick="setPeriod('30d')">
+                                    <i class="ph ph-calendar"></i> 30 días
+                                </button>
+                                <button class="period-btn" data-period="custom" onclick="toggleCustomPeriod()">
+                                    <i class="ph ph-sliders"></i> Personalizado
+                                </button>
+                            </div>
+                            <div class="custom-period" id="custom-period" style="display: none;">
+                                <div class="date-inputs">
+                                    <div class="date-field">
+                                        <label>Desde</label>
+                                        <input type="date" id="date-start">
+                                    </div>
+                                    <div class="date-field">
+                                        <label>Hasta</label>
+                                        <input type="date" id="date-end">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-actions">
+                        <button class="btn-primary btn-large" onclick="runComparison()">
+                            <i class="ph ph-play-circle"></i> Ejecutar Comparación
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comparison Results -->
+                <div class="comparison-results" id="comparison-results" style="display: none;">
+                    <!-- Summary Cards -->
+                    <section class="summary-grid">
+                        <div class="summary-card best">
+                            <div class="summary-icon">
+                                <i class="ph ph-trophy"></i>
+                            </div>
+                            <div class="summary-data">
+                                <span class="summary-label">Mejor Rendimiento</span>
+                                <span class="summary-value" id="best-crop">--</span>
+                                <span class="summary-sub" id="best-crop-score">--</span>
+                            </div>
+                        </div>
+                        <div class="summary-card worst">
+                            <div class="summary-icon">
+                                <i class="ph ph-warning-circle"></i>
+                            </div>
+                            <div class="summary-data">
+                                <span class="summary-label">Requiere Atención</span>
+                                <span class="summary-value" id="worst-crop">--</span>
+                                <span class="summary-sub" id="worst-crop-issue">--</span>
+                            </div>
+                        </div>
+                        <div class="summary-card avg">
+                            <div class="summary-icon">
+                                <i class="ph ph-chart-line-up"></i>
+                            </div>
+                            <div class="summary-data">
+                                <span class="summary-label">Promedio General</span>
+                                <span class="summary-value" id="avg-score">--</span>
+                                <span class="summary-sub">puntuación compuesta</span>
+                            </div>
+                        </div>
+                        <div class="summary-card variance">
+                            <div class="summary-icon">
+                                <i class="ph ph-arrows-left-right"></i>
+                            </div>
+                            <div class="summary-data">
+                                <span class="summary-label">Variabilidad</span>
+                                <span class="summary-value" id="variance-value">--</span>
+                                <span class="summary-sub">entre cultivos</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Comparative Charts -->
+                    <div class="charts-section">
+                        <div class="section-header">
+                            <h2><i class="ph ph-chart-line"></i> Gráficos Comparativos</h2>
+                            <div class="chart-actions">
+                                <button class="btn-secondary btn-small" onclick="exportChart('lineChart')">
+                                    <i class="ph ph-download-simple"></i> PNG
+                                </button>
+                                <button class="btn-secondary btn-small" onclick="toggleChartType()">
+                                    <i class="ph ph-chart-bar"></i> Cambiar Tipo
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Radar Chart -->
+                    <div class="charts-section">
+                        <div class="section-header">
+                            <h2><i class="ph ph-spider"></i> Perfil Multidimensional</h2>
+                        </div>
+                        <div class="chart-container radar-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Table -->
+                    <div class="table-section">
+                        <div class="section-header">
+                            <h2><i class="ph ph-table"></i> Tabla de Diferencias</h2>
+                            <button class="btn-secondary btn-small" onclick="exportTable()">
+                                <i class="ph ph-file-csv"></i> Exportar CSV
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Métrica</th>
+                                        <th id="th-crop-1">Cultivo 1</th>
+                                        <th id="th-crop-2">Cultivo 2</th>
+                                        <th id="th-crop-3">Cultivo 3</th>
+                                        <th id="th-crop-4">Cultivo 4</th>
+                                        <th>Diferencia</th>
+                                        <th>Mejor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparison-table-body">
+                                    <tr>
+                                        <td colspan="7" class="loading-row">Ejecuta una comparación para ver resultados</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Insights Panel -->
+                    <div class="insights-section">
+                        <div class="section-header">
+                            <h2><i class="ph ph-lightbulb"></i> Insights Automáticos</h2>
+                        </div>
+                        <div class="insights-grid" id="insights-grid">
+                            <!-- Se llena dinámicamente con JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state">
+                    <i class="ph ph-scales"></i>
+                    <h3>Configura tu comparación</h3>
+                    <p>Selecciona entre 2 y 4 cultivos, elige las métricas y el período para generar un análisis comparativo detallado.</p>
+                    <div class="empty-features">
+                        <div class="feature">
+                            <i class="ph ph-chart-line-up"></i>
+                            <span>Gráficos comparativos</span>
+                        </div>
+                        <div class="feature">
+                            <i class="ph ph-spider"></i>
+                            <span>Análisis multidimensional</span>
+                        </div>
+                        <div class="feature">
+                            <i class="ph ph-lightbulb"></i>
+                            <span>Insights automáticos</span>
+                        </div>
+                        <div class="feature">
+                            <i class="ph ph-file-csv"></i>
+                            <span>Exportación de datos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Detalles de Cultivo -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detail-title">Detalles del Cultivo</h2>
+                <button class="btn-close" onclick="closeDetailModal()"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" id="detail-body">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeDetailModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/comparador.js"></script>
+</body>
+</html>

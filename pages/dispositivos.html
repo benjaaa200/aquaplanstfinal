@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#173F35">
+    <title>Dispositivos IoT | AquaPlants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/dispositivos.css">
+  <link rel="stylesheet" href="../css/aqua-identity.css" />
+</head>
+<body>
+    <!-- Encabezado legado: layout.js lo retira y usa sus datos para la barra superior compartida -->
+    <div class="top-navbar" hidden>
+        <div class="page-title">
+            <h1>Dispositivos IoT</h1>
+            <p>Observa, filtra y administra la red de sensores AquaBrain</p>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="content-wrapper devx-page">
+
+            <!-- HERO / CENTRO DE CONTROL -->
+            <section class="devx-hero" aria-labelledby="devx-hero-title">
+                <div class="devx-hero-mesh" aria-hidden="true"></div>
+                <div class="devx-hero-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+                <div class="devx-hero-copy">
+                    <span class="devx-eyebrow">
+                        <span class="devx-live-dot"></span> AquaBrain · Red IoT
+                    </span>
+                    <h1 id="devx-hero-title">Centro de control de dispositivos</h1>
+                    <p>Supervisa sensores, actuadores y controladores de cada instalación. Filtra, inspecciona y detecta incidencias de un vistazo.</p>
+
+                    <div class="devx-hero-actions">
+                        <button type="button" class="devx-btn devx-btn-primary" id="devx-refresh">
+                            <i class="ph ph-arrows-clockwise"></i> Actualizar
+                        </button>
+                        <button type="button" class="devx-btn devx-btn-ghost" id="devx-export">
+                            <i class="ph ph-download-simple"></i> Exportar CSV
+                        </button>
+                        <button type="button" class="devx-btn devx-btn-ghost" id="devx-create" hidden>
+                            <i class="ph ph-plus"></i> Nuevo dispositivo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="devx-hero-pulse" aria-hidden="true">
+                    <div class="devx-radar">
+                        <span></span><span></span><span></span>
+                        <i class="ph ph-cpu"></i>
+                    </div>
+                    <div class="devx-hero-pulse-label">
+                        <strong id="devx-hero-total">0</strong>
+                        <span>dispositivos en la red</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KPIs -->
+            <section class="devx-kpis" aria-label="Resumen de dispositivos">
+                <article class="devx-kpi is-clickable" data-tone="green" data-kpi-status="all" role="button" tabindex="0" title="Ver todos los dispositivos">
+                    <div class="devx-kpi-icon"><i class="ph ph-devices"></i></div>
+                    <div class="devx-kpi-copy">
+                        <span class="devx-kpi-label">Total registrados</span>
+                        <strong class="devx-kpi-value" id="devx-kpi-total">0</strong>
+                        <span class="devx-kpi-sub" id="devx-kpi-total-sub">Sin datos aún</span>
+                    </div>
+                </article>
+                <article class="devx-kpi is-clickable" data-tone="aqua" data-kpi-status="online" role="button" tabindex="0" title="Ver dispositivos en línea">
+                    <div class="devx-kpi-icon"><i class="ph ph-wifi-high"></i></div>
+                    <div class="devx-kpi-copy">
+                        <span class="devx-kpi-label">En línea</span>
+                        <strong class="devx-kpi-value" id="devx-kpi-online">0</strong>
+                        <span class="devx-kpi-sub" id="devx-kpi-online-sub">Disponibilidad 0%</span>
+                    </div>
+                </article>
+                <article class="devx-kpi is-clickable" data-tone="red" data-kpi-status="offline" role="button" tabindex="0" title="Ver dispositivos sin conexión">
+                    <div class="devx-kpi-icon"><i class="ph ph-wifi-slash"></i></div>
+                    <div class="devx-kpi-copy">
+                        <span class="devx-kpi-label">Sin conexión</span>
+                        <strong class="devx-kpi-value" id="devx-kpi-offline">0</strong>
+                        <span class="devx-kpi-sub" id="devx-kpi-offline-sub">Requieren revisión</span>
+                    </div>
+                </article>
+                <article class="devx-kpi is-clickable" data-tone="amber" data-kpi-status="maintenance" role="button" tabindex="0" title="Ver dispositivos en mantenimiento">
+                    <div class="devx-kpi-icon"><i class="ph ph-wrench"></i></div>
+                    <div class="devx-kpi-copy">
+                        <span class="devx-kpi-label">En mantenimiento</span>
+                        <strong class="devx-kpi-value" id="devx-kpi-maintenance">0</strong>
+                        <span class="devx-kpi-sub" id="devx-kpi-maintenance-sub">Fuera de servicio</span>
+                    </div>
+                </article>
+            </section>
+
+            <!-- SALUD DE RED + DISTRIBUCIÓN -->
+            <section class="devx-insights" aria-label="Análisis de la red">
+                <article class="devx-panel devx-health">
+                    <header class="devx-panel-head">
+                        <div>
+                            <h2>Salud de la red</h2>
+                            <p>Distribución de estados en este momento</p>
+                        </div>
+                        <span class="devx-chip" id="devx-availability-chip">-- disponible</span>
+                    </header>
+                    <div class="devx-health-body">
+                        <div class="devx-donut" id="devx-donut" role="img" aria-label="Distribución de estados">
+                            <div class="devx-donut-center">
+                                <strong id="devx-donut-value">--</strong>
+                                <span>disponibilidad</span>
+                            </div>
+                        </div>
+                        <ul class="devx-legend" id="devx-legend">
+                            <li data-tone="green">
+                                <span class="devx-legend-dot"></span>
+                                <span class="devx-legend-label">En línea</span>
+                                <strong id="devx-legend-online">0</strong>
+                                <em id="devx-legend-online-pct">0%</em>
+                            </li>
+                            <li data-tone="red">
+                                <span class="devx-legend-dot"></span>
+                                <span class="devx-legend-label">Sin conexión</span>
+                                <strong id="devx-legend-offline">0</strong>
+                                <em id="devx-legend-offline-pct">0%</em>
+                            </li>
+                            <li data-tone="amber">
+                                <span class="devx-legend-dot"></span>
+                                <span class="devx-legend-label">Mantenimiento</span>
+                                <strong id="devx-legend-maintenance">0</strong>
+                                <em id="devx-legend-maintenance-pct">0%</em>
+                            </li>
+                        </ul>
+                    </div>
+                </article>
+
+                <article class="devx-panel devx-distribution">
+                    <header class="devx-panel-head">
+                        <div>
+                            <h2>Distribución por instalación</h2>
+                            <p>Dispositivos agrupados por sector</p>
+                        </div>
+                        <i class="ph ph-buildings devx-panel-icon"></i>
+                    </header>
+                    <div class="devx-distribution-list" id="devx-install-list">
+                        <p class="devx-placeholder">Sin instalaciones registradas.</p>
+                    </div>
+                </article>
+            </section>
+
+            <!-- TOOLBAR -->
+            <section class="devx-toolbar" aria-label="Filtros de dispositivos">
+                <div class="devx-segments" id="devx-status-filter" role="tablist" aria-label="Filtrar por estado">
+                    <button type="button" class="devx-segment is-active" data-status="all" role="tab" aria-selected="true">
+                        Todos <span class="devx-segment-count" data-count="all">0</span>
+                    </button>
+                    <button type="button" class="devx-segment" data-status="online" role="tab" aria-selected="false">
+                        En línea <span class="devx-segment-count" data-count="online">0</span>
+                    </button>
+                    <button type="button" class="devx-segment" data-status="offline" role="tab" aria-selected="false">
+                        Sin conexión <span class="devx-segment-count" data-count="offline">0</span>
+                    </button>
+                    <button type="button" class="devx-segment" data-status="maintenance" role="tab" aria-selected="false">
+                        Mantenimiento <span class="devx-segment-count" data-count="maintenance">0</span>
+                    </button>
+                </div>
+
+                <div class="devx-toolbar-controls">
+                    <label class="devx-search">
+                        <i class="ph ph-magnifying-glass"></i>
+                        <input type="search" id="devx-search" placeholder="Buscar nombre, MAC, IP, modelo…" autocomplete="off" aria-label="Buscar dispositivo">
+                        <kbd>/</kbd>
+                    </label>
+
+                    <select class="devx-select" id="devx-filter-type" aria-label="Filtrar por tipo">
+                        <option value="all">Todos los tipos</option>
+                        <option value="sensor">Sensores</option>
+                        <option value="actuador">Actuadores</option>
+                        <option value="controlador">Controladores</option>
+                    </select>
+
+                    <select class="devx-select" id="devx-filter-install" aria-label="Filtrar por instalación">
+                        <option value="all">Todas las instalaciones</option>
+                    </select>
+
+                    <select class="devx-select" id="devx-sort" aria-label="Ordenar dispositivos">
+                        <option value="name">Nombre (A-Z)</option>
+                        <option value="status">Estado</option>
+                        <option value="recent">Conexión reciente</option>
+                        <option value="type">Tipo</option>
+                    </select>
+
+                    <div class="devx-view-toggle" role="group" aria-label="Cambiar vista">
+                        <button type="button" class="is-active" data-view="grid" aria-label="Vista de tarjetas" aria-pressed="true"><i class="ph ph-squares-four"></i></button>
+                        <button type="button" data-view="list" aria-label="Vista de lista" aria-pressed="false"><i class="ph ph-list-dashes"></i></button>
+                    </div>
+
+                    <button type="button" class="devx-clear" id="devx-clear" hidden>
+                        <i class="ph ph-x"></i> Limpiar
+                    </button>
+                </div>
+            </section>
+
+            <div class="devx-results-meta">
+                <span id="devx-results-count">Cargando dispositivos…</span>
+                <span class="devx-sync" id="devx-last-sync"><i class="ph ph-pulse"></i> Sincronizando…</span>
+            </div>
+
+            <!-- GRID / LIST -->
+            <div class="devx-grid" id="devx-grid" aria-live="polite"></div>
+        </div>
+    </main>
+
+    <!-- DRAWER DE DETALLE -->
+    <div class="devx-drawer-overlay" id="devx-drawer-overlay" hidden>
+        <aside class="devx-drawer" id="devx-drawer" role="dialog" aria-modal="true" aria-labelledby="devx-drawer-title" aria-describedby="devx-drawer-sub">
+            <header class="devx-drawer-head">
+                <div>
+                    <span class="devx-drawer-eyebrow">Ficha del dispositivo</span>
+                    <h2 id="devx-drawer-title">Detalle</h2>
+                    <p id="devx-drawer-sub"></p>
+                </div>
+                <button type="button" class="devx-icon-btn" id="devx-drawer-close" aria-label="Cerrar detalle">
+                    <i class="ph ph-x"></i>
+                </button>
+            </header>
+            <div class="devx-drawer-body" id="devx-drawer-body"></div>
+        </aside>
+    </div>
+
+    <!-- MODAL NUEVO DISPOSITIVO -->
+    <div class="devx-modal-overlay" id="devx-modal-overlay" hidden>
+        <div class="devx-modal" role="dialog" aria-modal="true" aria-labelledby="devx-modal-title">
+            <header class="devx-modal-head">
+                <div>
+                    <span class="devx-drawer-eyebrow">Alta en la red</span>
+                    <h2 id="devx-modal-title">Registrar nuevo dispositivo</h2>
+                </div>
+                <button type="button" class="devx-icon-btn" id="devx-modal-close" aria-label="Cerrar formulario">
+                    <i class="ph ph-x"></i>
+                </button>
+            </header>
+            <form id="devx-form" class="devx-form" novalidate>
+                <div class="devx-form-grid">
+                    <div class="devx-field devx-field-full">
+                        <label for="devx-name">Nombre del dispositivo</label>
+                        <input type="text" id="devx-name" name="nombre" required maxlength="255" placeholder="Ej: Sensor de temperatura invernadero A">
+                    </div>
+
+                    <div class="devx-field">
+                        <label for="devx-type">Tipo</label>
+                        <select id="devx-type" name="tipo" required>
+                            <option value="sensor">Sensor</option>
+                            <option value="actuador">Actuador</option>
+                            <option value="controlador">Controlador</option>
+                        </select>
+                    </div>
+
+                    <div class="devx-field">
+                        <label for="devx-model">Modelo</label>
+                        <input type="text" id="devx-model" name="modelo" maxlength="150" placeholder="Ej: DHT22">
+                    </div>
+
+                    <div class="devx-field devx-field-full">
+                        <label for="devx-mac">Dirección MAC / ID</label>
+                        <input type="text" id="devx-mac" name="direccion_mac" maxlength="17" placeholder="AA:BB:CC:DD:EE:FF" inputmode="text" spellcheck="false">
+                        <small>Formato hexadecimal separado por dos puntos o guiones.</small>
+                    </div>
+
+                    <div class="devx-field">
+                        <label for="devx-ip">Dirección IP / host</label>
+                        <input type="text" id="devx-ip" name="direccion_ip" maxlength="253" placeholder="192.168.1.50" inputmode="decimal" spellcheck="false">
+                        <small>Se comprobará la conexión TCP al registrar.</small>
+                    </div>
+
+                    <div class="devx-field">
+                        <label for="devx-port">Puerto TCP</label>
+                        <input type="number" id="devx-port" name="puerto" min="1" max="65535" value="80">
+                    </div>
+
+                    <div class="devx-field devx-field-full">
+                        <label for="devx-install">Instalación</label>
+                        <select id="devx-install" name="instalacion_id">
+                            <option value="">Sin asignar</option>
+                        </select>
+                    </div>
+
+                    <div class="devx-field devx-field-full">
+                        <label for="devx-desc">Descripción</label>
+                        <textarea id="devx-desc" name="descripcion" rows="3" maxlength="2000" placeholder="Notas de ubicación, función o cableado…"></textarea>
+                    </div>
+                </div>
+
+                <footer class="devx-form-foot">
+                    <button type="button" class="devx-btn devx-btn-ghost-dark" id="devx-form-cancel">Cancelar</button>
+                    <button type="submit" class="devx-btn devx-btn-solid" id="devx-form-submit">
+                        <i class="ph ph-check-circle"></i> Registrar dispositivo
+                    </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/dispositivos.js"></script>
+</body>
+</html>

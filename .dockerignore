@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+venv
+aquaplanst
+.qodo
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.env
+*.log
+tests
+data
+simulador/__pycache__

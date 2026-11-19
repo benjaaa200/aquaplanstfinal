@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <title>AquaPlants · Iniciar sesión</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173F35'/%3E%3Cpath d='M32 12c8 10 14 17 14 25a14 14 0 0 1-28 0c0-8 6-15 14-25z' fill='%2383B99A'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5.0.3/index.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.min.css" />
+  <link rel="stylesheet" href="css/aqua-identity.css" />
+</head>
+<body>
+  <div class="wrap">
+    <!-- ============ PANEL IZQUIERDO (BRANDING) ============ -->
+    <section class="brand">
+      <div class="brand-top">
+        <div class="logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.5c4 6 8 10 8 14a8 8 0 0 1-16 0c0-4 4-8 8-14z"/>
+            <path d="M12 22v-6" opacity=".6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">Aqua<span>Plants</span></div>
+          <div class="brand-sub">Smart Hydroponics</div>
+        </div>
+      </div>
+
+      <div class="brand-hero">
+        <h1>Cultiva con <em>inteligencia</em>, cosecha con confianza.</h1>
+        <p>Plataforma IoT centralizada para el monitoreo, control y análisis de tus cultivos hidropónicos AquaBrain en tiempo real.</p>
+        <ul class="feature-list">
+          <li class="feature">
+            <span class="dot">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            Monitoreo en tiempo real de temperatura, humedad y nivel de agua
+          </li>
+          <li class="feature">
+            <span class="dot">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            Alertas automáticas y control de riego por presets
+          </li>
+          <li class="feature">
+            <span class="dot">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            Históricos y análisis comparativo entre instalaciones
+          </li>
+        </ul>
+      </div>
+
+      <div class="brand-footer">
+        <span>© 2026 AquaPlants · Proyecto Integrado</span>
+        <div class="dots">
+          <span class="active"></span><span></span><span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL DERECHO (FORM) ============ -->
+    <section class="auth">
+      <div class="card">
+        <div class="card-head" id="loginHead">
+          <div class="eyebrow">Bienvenido</div>
+          <h2>Inicia sesión en tu cuenta</h2>
+          <p>Accede al panel de control de AquaPlants</p>
+        </div>
+
+        <div id="alert" class="alert" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="alertMsg"></span>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="username">Usuario</label>
+            <div class="input">
+              <svg class="lead" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input type="text" id="username" name="username" placeholder="usuario@aquaplants.cl" autocomplete="username" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="password">Contraseña</label>
+            <div class="input">
+              <svg class="lead" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+              <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">
+                <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="row-between">
+            <label class="check">
+              <input type="checkbox" id="remember" />
+              <span>Recordar sesión</span>
+            </label>
+            <a href="#" class="link" id="forgotLink">¿Olvidaste tu contraseña?</a>
+          </div>
+
+          <button type="submit" class="btn" id="submitBtn">
+            <span id="btnText">Iniciar sesión</span>
+            <svg id="btnArrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </form>
+
+        <!-- RECUPERACION DE CONTRASENA -->
+        <div id="recoveryPanel" class="recovery-panel" style="display:none;">
+          <div class="card-head">
+            <div class="eyebrow">Seguridad</div>
+            <h2>Recuperar acceso</h2>
+            <p id="recoveryHint">Te enviaremos un código a tu correo o teléfono de respaldo.</p>
+          </div>
+
+          <ol class="recovery-steps" id="recoverySteps" aria-label="Pasos de recuperación">
+            <li class="recovery-step is-active" data-step="1"><span>1</span> Identidad</li>
+            <li class="recovery-step-line" aria-hidden="true"></li>
+            <li class="recovery-step" data-step="2"><span>2</span> Código</li>
+            <li class="recovery-step-line" aria-hidden="true"></li>
+            <li class="recovery-step" data-step="3"><span>3</span> Contraseña</li>
+          </ol>
+
+          <form id="recoveryForm" novalidate>
+            <div id="recoveryStep1">
+              <div class="field">
+                <label for="recoveryId">Usuario o correo</label>
+                <input type="text" id="recoveryId" autocomplete="username" placeholder="usuario o correo@ejemplo.cl" required />
+              </div>
+              <button type="submit" class="btn" id="recoverySendBtn">Enviar código</button>
+              <button type="button" class="btn btn-ghost" id="recoveryLinkBtn">Enviar enlace por correo</button>
+              <p class="recovery-timer">El enlace abre la recuperación directamente desde tu correo.</p>
+            </div>
+
+            <div id="recoveryStep2" style="display:none;">
+              <div class="recovery-dev" id="recoveryDev" hidden>
+                <strong>Modo desarrollo</strong>
+                <p id="recoveryDevCodeWrap">No hay correo ni SMS configurado. Tu código es <code id="recoveryDevCode"></code>.</p>
+                <p id="recoveryDevLinkWrap" hidden>Enlace de recuperación: <a id="recoveryDevLink" href="#" target="_blank" rel="noopener">abrir enlace</a>.</p>
+              </div>
+              <div id="recoveryCodeWrap">
+                <div class="field">
+                  <label for="recoveryCode">Código de 6 dígitos</label>
+                  <input type="text" id="recoveryCode" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" required />
+                </div>
+              </div>
+              <div id="recoveryLinkInfo" hidden>
+                <p class="recovery-timer">Te enviamos un enlace a tu correo de respaldo. Ábrelo para continuar con el cambio de contraseña.</p>
+              </div>
+              <p class="recovery-timer" id="recoveryTimer" aria-live="polite"></p>
+              <button type="submit" class="btn" id="recoveryVerifyBtn">Verificar código</button>
+              <div class="recovery-actions">
+                <button type="button" class="btn btn-ghost" id="recoveryResendBtn">Reenviar código</button>
+                <button type="button" class="btn btn-ghost" id="recoveryChangeBtn">Cambiar usuario</button>
+              </div>
+            </div>
+
+            <div id="recoveryStep3" style="display:none;">
+              <div class="field">
+                <label for="recoveryPassword">Nueva contraseña</label>
+                <input type="password" id="recoveryPassword" minlength="12" maxlength="128" autocomplete="new-password" placeholder="Mínimo 12 caracteres" required />
+              </div>
+              <div class="field">
+                <label for="recoveryPassword2">Repetir contraseña</label>
+                <input type="password" id="recoveryPassword2" minlength="12" maxlength="128" autocomplete="new-password" placeholder="Repite la contraseña" required />
+              </div>
+              <p class="recovery-timer">Mínimo 12 caracteres. Combina mayúsculas, números y símbolos.</p>
+              <button type="submit" class="btn" id="recoveryResetBtn">Actualizar contraseña</button>
+            </div>
+          </form>
+
+          <p style="font-size:12px;color:var(--g-text-soft);line-height:1.6;margin:14px 0 0">
+            Si no tienes correo o teléfono de respaldo, pide a un administrador que lo configure en tu cuenta.
+          </p>
+          <button type="button" class="btn btn-ghost" id="recoveryBackBtn">Volver al inicio de sesión</button>
+        </div>
+
+        <div class="card-foot">
+          ¿No tienes acceso? <a href="#" class="link">Contacta al administrador</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/config.js"></script>
+
+  <script src="js/login.js"></script>
+</body>
+</html>
