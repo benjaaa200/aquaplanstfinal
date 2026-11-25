@@ -1,8 +1,8 @@
 """Persisted irrigation zone settings, schedules, and execution history."""
 from datetime import datetime, time, timezone
-from typing import Literal
+from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -27,14 +27,24 @@ class ZonaRiegoUpdate(BaseModel):
     activa: bool
 
 
+FRECUENCIAS_RIEGO = Literal[
+    "diario", "lunes", "martes", "miercoles",
+    "jueves", "viernes", "sabado", "domingo"
+]
+
+
 class ProgramacionRiegoCreate(BaseModel):
     zona_id: int = Field(gt=0)
     hora_inicio: time
     duracion: int = Field(ge=1, le=120)
-    frecuencia: Literal[
-        "diario", "lunes", "martes", "miercoles",
-        "jueves", "viernes", "sabado", "domingo"
-    ]
+    frecuencia: FRECUENCIAS_RIEGO
+
+
+class ProgramacionRiegoUpdate(BaseModel):
+    hora_inicio: Optional[time] = None
+    duracion: Optional[int] = Field(default=None, ge=1, le=120)
+    frecuencia: Optional[FRECUENCIAS_RIEGO] = None
+    activa: Optional[bool] = None
 
 
 def _require_crop_access(db: Session, user: Usuario, crop_id: int) -> Cultivo:
@@ -72,6 +82,42 @@ def _get_or_create_zone(db: Session, crop_id: int) -> ZonaRiego:
         if not zone:
             raise
         return zone
+
+
+def _zona_por_cultivo(db: Session, user: Usuario, zona_id: int) -> ZonaRiego:
+    crop = _require_crop_access(db, user, zona_id)
+    zona = db.query(ZonaRiego).filter(ZonaRiego.cultivo_id == crop.id).first()
+    if not zona:
+        raise HTTPException(status_code=404, detail="Zona de riego no encontrada")
+    return zona
+
+
+def _serializar_programacion(
+    programacion: ProgramacionRiego, zona: ZonaRiego
+) -> dict:
+    return {
+        "id": programacion.id,
+        "zona_id": zona.cultivo_id,
+        "hora_inicio": programacion.hora_inicio,
+        "duracion": programacion.duracion_minutos,
+        "frecuencia": programacion.frecuencia,
+        "activa": programacion.activa,
+    }
+
+
+def _programacion_accessible(
+    db: Session, user: Usuario, programacion_id: int
+) -> ProgramacionRiego:
+    programacion = db.query(ProgramacionRiego).filter(
+        ProgramacionRiego.id == programacion_id
+    ).first()
+    if not programacion:
+        raise HTTPException(status_code=404, detail="Programación no encontrada")
+    zona = db.query(ZonaRiego).filter(ZonaRiego.id == programacion.zona_id).first()
+    if not zona:
+        raise HTTPException(status_code=404, detail="Zona de riego no encontrada")
+    _require_crop_access(db, user, zona.cultivo_id)
+    return programacion
 
 
 @router.get("/zonas")
@@ -177,6 +223,22 @@ def actualizar_zona(
     return {"id": crop.id, "activa": zone.activa}
 
 
+@router.delete("/zonas/{zona_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_zona(
+    zona_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    """Elimina la zona software de un cultivo y sus programaciones."""
+    zona = _zona_por_cultivo(db, current_user, zona_id)
+    db.query(ProgramacionRiego).filter(
+        ProgramacionRiego.zona_id == zona.id
+    ).delete(synchronize_session=False)
+    db.delete(zona)
+    db.commit()
+    return None
+
+
 @router.get("/historial")
 def obtener_historial(
     limit: int = Query(default=100, ge=1, le=500),
@@ -246,3 +308,80 @@ def programar_riego(
             "el ciclo no se ejecutará físicamente."
         ),
     }
+
+
+@router.get("/programaciones")
+def listar_programaciones(
+    activa: bool | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    """Lista las programaciones de las zonas accesibles al usuario."""
+    query = db.query(ProgramacionRiego).join(
+        ZonaRiego, ProgramacionRiego.zona_id == ZonaRiego.id
+    )
+    visible_ids = visible_cultivo_ids(db, current_user)
+    if visible_ids is not None:
+        query = query.filter(ZonaRiego.cultivo_id.in_(visible_ids))
+    if activa is not None:
+        query = query.filter(ProgramacionRiego.activa.is_(activa))
+    programaciones = query.order_by(ProgramacionRiego.id).limit(limit).all()
+    zonas = {
+        zona.id: zona
+        for zona in db.query(ZonaRiego).filter(
+            ZonaRiego.id.in_([item.zona_id for item in programaciones])
+        ).all()
+    }
+    return [
+        _serializar_programacion(item, zonas[item.zona_id])
+        for item in programaciones
+    ]
+
+
+@router.get("/programaciones/{programacion_id}")
+def obtener_programacion(
+    programacion_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    programacion = _programacion_accessible(db, current_user, programacion_id)
+    return _serializar_programacion(programacion, programacion.zona)
+
+
+@router.put("/programaciones/{programacion_id}")
+def actualizar_programacion(
+    programacion_id: int,
+    cambios: ProgramacionRiegoUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    programacion = _programacion_accessible(db, current_user, programacion_id)
+    datos = {
+        campo: valor
+        for campo, valor in cambios.model_dump(exclude_unset=True).items()
+        if valor is not None
+    }
+    if "hora_inicio" in datos:
+        datos["hora_inicio"] = datos["hora_inicio"].strftime("%H:%M")
+    duracion = datos.pop("duracion", None)
+    if duracion is not None:
+        datos["duracion_minutos"] = duracion
+        programacion.zona.duracion_programada = duracion
+    for campo, valor in datos.items():
+        setattr(programacion, campo, valor)
+    db.commit()
+    db.refresh(programacion)
+    return _serializar_programacion(programacion, programacion.zona)
+
+
+@router.delete("/programaciones/{programacion_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_programacion(
+    programacion_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    programacion = _programacion_accessible(db, current_user, programacion_id)
+    db.delete(programacion)
+    db.commit()
+    return None

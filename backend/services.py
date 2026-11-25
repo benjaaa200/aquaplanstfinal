@@ -19,7 +19,7 @@ from backend.models import (
 )
 from backend.security import get_current_active_user, is_admin
 from backend.cache import alert_throttle, sensor_notification_throttle
-from backend.utils import utcnow
+from backend.utils import naive_utc, utcnow
 
 
 SUPERVISOR_ROLES = frozenset({"supervisor"})
@@ -208,9 +208,6 @@ def notificar_alerta_sensor(
 ) -> None:
     """Notify the people responsible for a crop about a new sensor alert."""
     throttle_key = (db.get_bind(), cultivo.id, alerta.tipo)
-    if sensor_notification_throttle.get(throttle_key) is not None:
-        return
-    sensor_notification_throttle.set(throttle_key, True)
 
     targets = [
         row[0]
@@ -232,6 +229,8 @@ def notificar_alerta_sensor(
                 Usuario.activo.is_(True),
             ).all()
         ]
+    if not targets or not sensor_notification_throttle.get_or_set(throttle_key, True):
+        return
 
     notificar_usuarios(
         db,
@@ -250,18 +249,12 @@ def ahora() -> datetime:
     return utcnow()
 
 
-def _naive_utc(value):
-    if not value:
-        return None
-    return value.replace(tzinfo=None) if value.tzinfo else value
-
 
 def generar_alertas_pendientes(db: Session, user: Usuario) -> int:
     """Create at most one due/overdue alert per task or inspection per day."""
     throttle_key = (db.get_bind(), user.id)
-    if alert_throttle.get(throttle_key) is not None:
+    if not alert_throttle.get_or_set(throttle_key, True):
         return 0
-    alert_throttle.set(throttle_key, True)
 
     now = utcnow()
     day_start = datetime(now.year, now.month, now.day)
@@ -273,7 +266,7 @@ def generar_alertas_pendientes(db: Session, user: Usuario) -> int:
         Tarea.estado.notin_(("completada", "cancelada")),
     ).all()
     for tarea in tareas:
-        limite = _naive_utc(tarea.fecha_limite)
+        limite = naive_utc(tarea.fecha_limite)
         if not limite:
             continue
         atrasada = limite < now
@@ -321,7 +314,7 @@ def generar_alertas_pendientes(db: Session, user: Usuario) -> int:
             user.id,
             "inspeccion",
             "Inspección próxima",
-            f"{evento.titulo} · {_naive_utc(evento.fecha_inicio):%d-%m-%Y %H:%M}",
+            f"{evento.titulo} · {naive_utc(evento.fecha_inicio):%d-%m-%Y %H:%M}",
             "importante",
             "/pages/calendario.html",
             "inspeccion_alerta",

@@ -11,7 +11,7 @@
         humMin: 40,
         waterMin: 20,
         phMin: 5.5,
-        phMax: 7.0
+        phMax: 7.5
     };
 
     var SCENARIOS = {
@@ -321,7 +321,7 @@
             els.alerts.textContent = state.alerts;
             els.last.textContent = new Date().toLocaleTimeString('es-CL', { hour12: false });
             addLogRow(payload, alerts, measurement, null);
-            if (window.loadAlertBadge) window.loadAlertBadge();
+            if (window.AquaUI && window.AquaUI.refresh) window.AquaUI.refresh();
         }).catch(function (error) {
             logError('Error al enviar la medición: ' + error.message);
             stop();

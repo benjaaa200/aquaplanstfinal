@@ -68,6 +68,13 @@ async function loadUsers() {
             roleCell.appendChild(roleBadge);
             row.appendChild(roleCell);
 
+            const intentosCell = document.createElement('td');
+            const intentosBadge = document.createElement('span');
+            intentosBadge.className = 'badge warning';
+            intentosBadge.textContent = `${user.intentos_login_maximos ?? 5} permitidos`;
+            intentosCell.appendChild(intentosBadge);
+            row.appendChild(intentosCell);
+
             const statusCell = document.createElement('td');
             const statusBadge = document.createElement('span');
             statusBadge.className = `status-badge ${user.activo ? 'status-activo' : 'status-inactivo'}`;
@@ -86,6 +93,16 @@ async function loadUsers() {
                 assignButton.textContent = 'Asignar cultivos';
                 actionsCell.appendChild(assignButton);
             }
+            const resetButton = document.createElement('button');
+            resetButton.type = 'button';
+            resetButton.className = 'btn-icon';
+            resetButton.title = 'Reiniciar intentos de login';
+            resetButton.setAttribute('aria-label', 'Reiniciar intentos de login');
+            resetButton.dataset.resetUser = String(user.id);
+            resetButton.dataset.username = user.username || '';
+            resetButton.innerHTML = '<i class="ph ph-arrow-counterclockwise"></i>';
+            actionsCell.appendChild(resetButton);
+
             const editButton = document.createElement('button');
             editButton.type = 'button';
             editButton.className = 'btn-icon';
@@ -121,7 +138,7 @@ function appendCell(row, value) {
 function appendTableMessage(message) {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
-    cell.colSpan = 6;
+    cell.colSpan = 7;
     cell.className = 'loading-row';
     cell.textContent = message;
     row.appendChild(cell);
@@ -146,7 +163,10 @@ createUserForm.addEventListener('submit', async (event) => {
         email_respaldo: document.getElementById('email_respaldo').value.trim() || null,
         telefono_respaldo: document.getElementById('telefono_respaldo').value.trim() || null,
         rol: document.getElementById('rol').value,
-        activo: document.getElementById('activo').checked
+        activo: document.getElementById('activo').checked,
+        intentos_login_maximos: Number(
+            document.getElementById('intentos_login_maximos').value
+        )
     };
     if (password) userData.password = password;
 
@@ -175,6 +195,14 @@ createUserForm.addEventListener('submit', async (event) => {
 });
 
 userTableBody.addEventListener('click', (event) => {
+    const resetButton = event.target.closest('[data-reset-user]');
+    if (resetButton) {
+        resetUserAttempts(
+            Number(resetButton.dataset.resetUser),
+            resetButton.dataset.username
+        );
+        return;
+    }
     const assignButton = event.target.closest('[data-assign-user]');
     if (assignButton) {
         openAssignment(Number(assignButton.dataset.assignUser), assignButton.dataset.username);
@@ -265,6 +293,7 @@ function openModal(userId = null) {
     createUserForm.reset();
     editingUserId = userId || null;
     document.getElementById('activo').checked = true;
+    document.getElementById('intentos_login_maximos').value = '5';
     document.getElementById('password').value = '';
     document.getElementById('userModalTitle').textContent = 'Crear nuevo usuario';
 
@@ -278,6 +307,9 @@ function openModal(userId = null) {
         document.getElementById('telefono_respaldo').value = user.telefono_respaldo || '';
         document.getElementById('rol').value = user.rol === 'administrador' ? 'admin' : user.rol;
         document.getElementById('activo').checked = Boolean(user.activo);
+        document.getElementById('intentos_login_maximos').value = String(
+            user.intentos_login_maximos ?? 5
+        );
         document.getElementById('userModalTitle').textContent = 'Editar usuario';
     }
 
@@ -287,6 +319,21 @@ function openModal(userId = null) {
 function closeModal() {
     editingUserId = null;
     userModal.classList.remove('active');
+}
+
+async function resetUserAttempts(userId, username) {
+    try {
+        const result = await apiRequest(`/api/usuarios/${userId}/reset-intentos`, {
+            method: 'POST'
+        });
+        showToast(
+            `Intentos de ${username} reiniciados (${result.reiniciadas ?? 0}).`,
+            'success'
+        );
+    } catch (error) {
+        console.error('Error al reiniciar intentos:', error);
+        showToast(`No se pudieron reiniciar los intentos: ${error.message}`, 'error');
+    }
 }
 
 async function deleteUser(userId) {

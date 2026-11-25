@@ -43,6 +43,18 @@ class TTLCache:
                 self._evict_locked()
             self._data[key] = (expires_at, value)
 
+    def get_or_set(self, key: Any, value: Any, ttl: float | None = None) -> bool:
+        now = time.monotonic()
+        expires_at = now + (self.default_ttl if ttl is None else ttl)
+        with self._lock:
+            item = self._data.get(key)
+            if item is not None and item[0] > now:
+                return False
+            if len(self._data) >= self.maxsize:
+                self._evict_locked()
+            self._data[key] = (expires_at, value)
+            return True
+
     def _evict_locked(self) -> None:
         now = time.monotonic()
         expired = [key for key, (expires_at, _) in self._data.items() if expires_at <= now]
@@ -66,14 +78,15 @@ class RateLimiter:
         self._events: dict[str, list[float]] = {}
         self._lock = threading.Lock()
 
-    def allow(self, key: str) -> bool:
+    def allow(self, key: str, limit: int | None = None) -> bool:
         now = time.monotonic()
         cutoff = now - self.window_seconds
+        max_events = self.limit if limit is None else max(1, limit)
         with self._lock:
             if len(self._events) >= self.max_keys and key not in self._events:
                 self._events.clear()
             events = [stamp for stamp in self._events.get(key, ()) if stamp > cutoff]
-            if len(events) >= self.limit:
+            if len(events) >= max_events:
                 self._events[key] = events
                 return False
             events.append(now)
@@ -84,6 +97,14 @@ class RateLimiter:
         """Forget the events recorded for one key (for example after success)."""
         with self._lock:
             self._events.pop(key, None)
+
+    def reset_matching(self, suffix: str) -> int:
+        """Forget every key ending in ``suffix``; returns the number of keys."""
+        with self._lock:
+            keys = [key for key in self._events if key.endswith(suffix)]
+            for key in keys:
+                self._events.pop(key, None)
+            return len(keys)
 
     def clear(self) -> None:
         """Drop every recorded event; used by tests and manual resets."""

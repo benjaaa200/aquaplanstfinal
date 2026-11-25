@@ -30,6 +30,9 @@ class Usuario(Base):
     email_respaldo = Column(String(255), unique=True, index=True)
     telefono_respaldo = Column(String(32))
     token_version = Column(Integer, nullable=False, default=0, server_default="0")
+    intentos_login_maximos = Column(
+        Integer, nullable=False, default=5, server_default="5"
+    )
     cultivos_asignados = relationship("Cultivo", secondary="usuario_cultivo", 
 back_populates="encargados")
     instalaciones_responsable = relationship("Instalacion", back_populates="responsable")
@@ -634,6 +637,9 @@ class MovimientoInventario(Base):
     motivo = Column(Text)
     sector_id = Column(
         Integer, ForeignKey("instalaciones.id", ondelete="SET NULL"), index=True
+    )
+    solicitud_id = Column(
+        Integer, ForeignKey("inventario_solicitudes.id", ondelete="SET NULL"), index=True
     )
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 

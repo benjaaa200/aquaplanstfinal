@@ -107,10 +107,12 @@ def _initialize_schema():
     )
     Base.metadata.create_all(bind=engine)
     ensure_dispositivo_ip_columns(engine)
+    ensure_inventario_solicitud_column(engine)
     ensure_crop_installation_column(engine)
     ensure_alert_resolution_columns(engine)
     ensure_usuario_cultivo_unique(engine)
     ensure_usuario_reset_columns(engine)
+    ensure_usuario_login_attempts_column(engine)
     ensure_password_reset_token_columns(engine)
     ensure_performance_indexes(engine)
     logger.info("Base de datos inicializada correctamente")
@@ -147,6 +149,29 @@ def ensure_dispositivo_ip_columns(bind=engine):
             connection.execute(text(
                 "CREATE INDEX idx_dispositivos_direccion_ip "
                 "ON dispositivos (direccion_ip)"
+            ))
+
+
+def ensure_inventario_solicitud_column(bind=engine):
+    """Add the link between stock movements and supply requests."""
+    inspector = inspect(bind)
+    if not inspector.has_table("inventario_movimientos"):
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("inventario_movimientos")}
+    if "solicitud_id" not in columns:
+        with bind.begin() as connection:
+            connection.execute(text(
+                "ALTER TABLE inventario_movimientos ADD COLUMN solicitud_id INTEGER NULL"
+            ))
+    indexes = inspect(bind).get_indexes("inventario_movimientos")
+    if not any(
+        "solicitud_id" in (index.get("column_names") or []) for index in indexes
+    ):
+        with bind.begin() as connection:
+            connection.execute(text(
+                "CREATE INDEX idx_inventario_movimientos_solicitud "
+                "ON inventario_movimientos (solicitud_id)"
             ))
 
 
@@ -192,6 +217,22 @@ def ensure_usuario_reset_columns(bind=engine):
                 ))
         except Exception as exc:  # pragma: no cover - depende de datos existentes
             logger.warning("No se pudo crear el índice de email de respaldo: %s", exc)
+
+
+def ensure_usuario_login_attempts_column(bind=engine):
+    """Add the per-user login-attempt limit used by the authentication flow."""
+    inspector = inspect(bind)
+    if not inspector.has_table("usuarios"):
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("usuarios")}
+    if "intentos_login_maximos" not in columns:
+        with bind.begin() as connection:
+            connection.execute(text(
+                "ALTER TABLE usuarios ADD COLUMN intentos_login_maximos "
+                "INTEGER NOT NULL DEFAULT 5"
+            ))
+        logger.info("Columna intentos_login_maximos agregada a usuarios")
 
 
 def ensure_password_reset_token_columns(bind=engine):

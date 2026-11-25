@@ -8,8 +8,13 @@ from typing import List
 
 from backend.database import get_db
 from backend.models import Cultivo, Instalacion, Usuario
-from backend.schemas import CultivoCreate, CultivoResponse
-from backend.security import get_current_active_user, require_admin, visible_cultivo_ids
+from backend.schemas import CultivoCreate, CultivoResponse, CultivoUpdate
+from backend.security import (
+    get_current_active_user,
+    require_admin,
+    require_cultivo_access,
+    visible_cultivo_ids,
+)
 
 router = APIRouter(prefix="/cultivos", tags=["Cultivos"])
 
@@ -47,6 +52,46 @@ def crear_cultivo(
     db.commit()
     db.refresh(nuevo_cultivo)
     return nuevo_cultivo
+
+@router.get("/{cultivo_id}", response_model=CultivoResponse)
+def obtener_cultivo(
+    cultivo_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    """Devuelve un cultivo accesible por su ID."""
+    cultivo = db.query(Cultivo).filter(Cultivo.id == cultivo_id).first()
+    if not cultivo:
+        raise HTTPException(status_code=404, detail="Cultivo no encontrado")
+    require_cultivo_access(db, current_user, cultivo_id)
+    return cultivo
+
+
+@router.put("/{cultivo_id}", response_model=CultivoResponse)
+def actualizar_cultivo(
+    cultivo_id: int,
+    datos: CultivoUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    """Actualiza los campos enviados de un cultivo existente."""
+    cultivo = db.query(Cultivo).filter(Cultivo.id == cultivo_id).first()
+    if not cultivo:
+        raise HTTPException(status_code=404, detail="Cultivo no encontrado")
+
+    cambios = datos.model_dump(exclude_unset=True)
+    instalacion_id = cambios.get("instalacion_id")
+    if instalacion_id and not db.query(Instalacion.id).filter(
+        Instalacion.id == instalacion_id
+    ).first():
+        raise HTTPException(status_code=422, detail="Instalación no encontrada")
+
+    for campo, valor in cambios.items():
+        setattr(cultivo, campo, valor)
+    db.commit()
+    db.refresh(cultivo)
+    return cultivo
+
 
 @router.delete("/{cultivo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_cultivo(

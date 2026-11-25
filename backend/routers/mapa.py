@@ -17,10 +17,27 @@ from backend.models import (
 )
 from backend.schemas_ops import MapaConfigUpdate
 from backend.security import get_current_active_user, require_admin
-from backend.services import scoped_instalacion_ids
+from backend.services import require_instalacion_access, scoped_instalacion_ids
 from backend.utils import utcnow
 
 router = APIRouter(prefix="/mapa", tags=["Mapa de instalaciones"])
+
+
+def _validar_sector(db: Session, sector_id: int) -> None:
+    if not db.query(Instalacion.id).filter(Instalacion.id == sector_id).first():
+        raise HTTPException(status_code=404, detail="Sector no encontrado")
+
+
+def _serializar_config(config: ConfiguracionMapa) -> dict:
+    return {
+        "sector_id": config.sector_id,
+        "posicion_x": config.posicion_x,
+        "posicion_y": config.posicion_y,
+        "ancho": config.ancho,
+        "alto": config.alto,
+        "tipo_sector": config.tipo_sector,
+        "color": config.color,
+    }
 
 
 def _config_default(sector: Instalacion, index: int) -> dict:
@@ -247,6 +264,46 @@ def obtener_mapa(
     return result
 
 
+@router.get("/config/{sector_id}")
+def obtener_configuracion(
+    sector_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    _validar_sector(db, sector_id)
+    require_instalacion_access(db, current_user, sector_id)
+    config = db.query(ConfiguracionMapa).filter(
+        ConfiguracionMapa.sector_id == sector_id
+    ).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="Configuración no encontrada")
+    return _serializar_config(config)
+
+
+@router.post("/config/{sector_id}", status_code=201)
+def crear_configuracion(
+    sector_id: int,
+    payload: MapaConfigUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    sector = db.query(Instalacion).filter(Instalacion.id == sector_id).first()
+    if not sector:
+        raise HTTPException(status_code=404, detail="Sector no encontrado")
+    if db.query(ConfiguracionMapa.id).filter(
+        ConfiguracionMapa.sector_id == sector_id
+    ).first():
+        raise HTTPException(status_code=409, detail="El sector ya tiene configuración")
+    valores = _config_default(sector, 0)
+    valores.update(payload.model_dump(exclude_unset=True, exclude_none=True))
+    config = ConfiguracionMapa(sector_id=sector_id, **valores)
+    db.add(config)
+    db.commit()
+    db.refresh(config)
+    api_cache.clear()
+    return _serializar_config(config)
+
+
 @router.put("/config/{sector_id}")
 def actualizar_configuracion(
     sector_id: int,
@@ -254,25 +311,33 @@ def actualizar_configuracion(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_admin),
 ):
-    if not db.query(Instalacion.id).filter(Instalacion.id == sector_id).first():
-        raise HTTPException(status_code=404, detail="Sector no encontrado")
+    _validar_sector(db, sector_id)
     config = db.query(ConfiguracionMapa).filter(
         ConfiguracionMapa.sector_id == sector_id
     ).first()
     if not config:
         config = ConfiguracionMapa(sector_id=sector_id)
         db.add(config)
-    for campo, valor in payload.model_dump(exclude_unset=True).items():
+    for campo, valor in payload.model_dump(exclude_unset=True, exclude_none=True).items():
         setattr(config, campo, valor)
     db.commit()
     db.refresh(config)
     api_cache.clear()
-    return {
-        "sector_id": config.sector_id,
-        "posicion_x": config.posicion_x,
-        "posicion_y": config.posicion_y,
-        "ancho": config.ancho,
-        "alto": config.alto,
-        "tipo_sector": config.tipo_sector,
-        "color": config.color,
-    }
+    return _serializar_config(config)
+
+
+@router.delete("/config/{sector_id}", status_code=204)
+def eliminar_configuracion(
+    sector_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    config = db.query(ConfiguracionMapa).filter(
+        ConfiguracionMapa.sector_id == sector_id
+    ).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="Configuración no encontrada")
+    db.delete(config)
+    db.commit()
+    api_cache.clear()
+    return None

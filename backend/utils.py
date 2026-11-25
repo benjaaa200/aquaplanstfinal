@@ -2,6 +2,15 @@
 from datetime import datetime, timezone
 
 
+def naive_utc(value: datetime | None) -> datetime | None:
+    """Normalize an aware or naive datetime to a naive UTC value."""
+    if not value:
+        return None
+    if value.tzinfo:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
+
+
 def utcnow() -> datetime:
     """Return the current UTC time as a naive datetime.
 

@@ -76,9 +76,9 @@
 
     function renderKPIs() {
         var kpis = state.kpis;
-        setText('kpi-temp', kpis && kpis.avg_temp ? fmt(kpis.avg_temp, ' °C') : '—');
-        setText('kpi-humidity', kpis && kpis.avg_humidity ? fmt(kpis.avg_humidity, ' %') : '—');
-        setText('kpi-water', kpis && kpis.avg_water ? fmt(kpis.avg_water, ' %') : '—');
+        setText('kpi-temp', kpis ? fmt(kpis.avg_temp, ' °C') : '—');
+        setText('kpi-humidity', kpis ? fmt(kpis.avg_humidity, ' %') : '—');
+        setText('kpi-water', kpis ? fmt(kpis.avg_water, ' %') : '—');
         setText('kpi-alerts', kpis ? (kpis.active_alerts || 0) : '—');
 
         setText('kpi-temp-hint', kpis ? 'promedio reciente' : 'Sin conexión con la API');
@@ -91,12 +91,10 @@
 
     function updateAlertBadge(count) {
         var badge = document.getElementById('nav-alert-badge');
-        var dot = document.getElementById('notifDot');
         if (badge) {
             badge.textContent = count;
             badge.style.display = count > 0 ? 'inline-block' : 'none';
         }
-        if (dot) dot.style.display = count > 0 ? 'block' : 'none';
     }
 
     function renderHealth() {

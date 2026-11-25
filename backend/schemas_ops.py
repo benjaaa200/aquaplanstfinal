@@ -182,6 +182,11 @@ class MovimientoCreate(BaseModel):
     sector_id: Optional[int] = Field(default=None, gt=0)
 
 
+class MovimientoUpdate(BaseModel):
+    motivo: Optional[str] = Field(default=None, max_length=2000)
+    sector_id: Optional[int] = Field(default=None, gt=0)
+
+
 class SolicitudCreate(BaseModel):
     producto_id: int = Field(gt=0)
     cantidad: float = Field(gt=0)
@@ -234,6 +239,10 @@ class EventoUpdate(BaseModel):
     ] = None
 
 
+class EventoEstadoUpdate(BaseModel):
+    estado: Literal["programado", "en_ejecucion", "completado", "atrasado", "cancelado"]
+
+
 class EventoCompletar(BaseModel):
     fecha_realizacion: Optional[datetime] = None
     resultado: Optional[str] = Field(default=None, max_length=50)
@@ -267,14 +276,14 @@ class GrupoUpdate(BaseModel):
 
 
 class MapaConfigUpdate(BaseModel):
-    posicion_x: int = Field(default=0, ge=0, le=50)
-    posicion_y: int = Field(default=0, ge=0, le=50)
-    ancho: int = Field(default=2, ge=1, le=12)
-    alto: int = Field(default=1, ge=1, le=12)
-    tipo_sector: Literal[
-        "cultivo", "deposito", "bomba", "trabajo", "almacen", "otro"
-    ] = "cultivo"
-    color: str = Field(default="#0E7490", pattern=r"^#[0-9a-fA-F]{6}$")
+    posicion_x: Optional[int] = Field(default=None, ge=0, le=50)
+    posicion_y: Optional[int] = Field(default=None, ge=0, le=50)
+    ancho: Optional[int] = Field(default=None, ge=1, le=12)
+    alto: Optional[int] = Field(default=None, ge=1, le=12)
+    tipo_sector: Optional[
+        Literal["cultivo", "deposito", "bomba", "trabajo", "almacen", "otro"]
+    ] = None
+    color: Optional[str] = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
 
 
 class NotificacionAdminCreate(BaseModel):
@@ -287,3 +296,7 @@ class NotificacionAdminCreate(BaseModel):
     roles: list[Literal["admin", "administrador", "supervisor", "encargado"]] = Field(
         default_factory=list
     )
+
+
+class NotificacionUpdate(BaseModel):
+    leida: bool

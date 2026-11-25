@@ -5,14 +5,17 @@ from typing import List
 from datetime import datetime
 
 from backend.database import get_db
-from backend.models import Alerta, Usuario
-from backend.schemas import AlertaResponse, AlertaUpdate
+from backend.models import Alerta, Cultivo, Usuario
+from backend.schemas import AlertaCreate, AlertaResponse, AlertaUpdate
 from backend.security import (
     get_current_active_user,
     is_admin,
+    require_admin,
     require_cultivo_access,
     visible_cultivo_ids,
 )
+from backend.services import notificar_alerta_sensor
+from backend.utils import utcnow
 
 router = APIRouter(prefix="/alertas", tags=["Alertas"])
 
@@ -34,6 +37,36 @@ def obtener_alertas(
         query = query.filter(Alerta.cultivo_id.in_(cultivo_ids))
     alertas = query.offset(offset).limit(limit).all()
     return alertas
+
+@router.post("/", response_model=AlertaResponse, status_code=status.HTTP_201_CREATED)
+def crear_alerta(
+    alerta: AlertaCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    """Registra una alerta manual sobre un cultivo existente."""
+    cultivo = db.query(Cultivo).filter(Cultivo.id == alerta.cultivo_id).first()
+    if not cultivo:
+        raise HTTPException(status_code=422, detail="Cultivo no encontrado")
+
+    nueva = Alerta(
+        cultivo_id=alerta.cultivo_id,
+        tipo=alerta.tipo,
+        severidad=alerta.severidad,
+        mensaje=alerta.mensaje,
+        valor_detectado=alerta.valor_detectado,
+        umbral=alerta.umbral,
+        fecha_hora=utcnow(),
+        leida=False,
+        resuelta=False,
+    )
+    db.add(nueva)
+    db.flush()
+    notificar_alerta_sensor(db, nueva, cultivo)
+    db.commit()
+    db.refresh(nueva)
+    return nueva
+
 
 @router.put("/{alerta_id}/leer", response_model=AlertaResponse)
 def marcar_alerta_leida(
@@ -108,7 +141,7 @@ def resolver_alerta(
 def eliminar_alerta(
     alerta_id: int,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
+    current_user: Usuario = Depends(get_current_active_user),
 ):
     """
     Elimina una alerta del sistema (solo administradores).
@@ -123,3 +156,19 @@ def eliminar_alerta(
     db.delete(alerta)
     db.commit()
     return None
+
+
+@router.get("/{alerta_id}", response_model=AlertaResponse)
+def obtener_alerta(
+    alerta_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    """Devuelve una alerta accesible por su ID."""
+    alerta = db.query(Alerta).options(
+        joinedload(Alerta.cultivo)
+    ).filter(Alerta.id == alerta_id).first()
+    if not alerta:
+        raise HTTPException(status_code=404, detail="Alerta no encontrada")
+    require_cultivo_access(db, current_user, alerta.cultivo_id)
+    return alerta

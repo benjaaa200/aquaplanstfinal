@@ -32,12 +32,10 @@
 
     function updateAlertBadge(count) {
         var badge = document.getElementById('nav-alert-badge');
-        var dot = document.getElementById('notifDot');
         if (badge) {
             badge.textContent = count;
             badge.style.display = count > 0 ? 'inline-block' : 'none';
         }
-        if (dot) dot.style.display = count > 0 ? 'block' : 'none';
     }
 
     function safe(promise) {

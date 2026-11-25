@@ -15,6 +15,7 @@ from backend.models import (
 )
 from backend.schemas_ops import (
     MovimientoCreate,
+    MovimientoUpdate,
     ProductoCreate,
     ProductoUpdate,
     SolicitudCreate,
@@ -101,6 +102,7 @@ def _aplicar_movimiento(
     cantidad: float,
     motivo: str | None,
     sector_id: int | None,
+    solicitud_id: int | None = None,
 ) -> MovimientoInventario:
     if not producto.activo:
         raise HTTPException(status_code=409, detail="El producto está desactivado")
@@ -122,6 +124,7 @@ def _aplicar_movimiento(
         cantidad=cantidad,
         motivo=motivo,
         sector_id=sector_id,
+        solicitud_id=solicitud_id,
     )
     db.add(movimiento)
     db.flush()
@@ -247,6 +250,23 @@ def eliminar_producto(
     return {"message": "Producto eliminado", "desactivado": False}
 
 
+def _movimiento_visible(
+    db: Session, usuario: Usuario, movimiento_id: int
+) -> MovimientoInventario:
+    movimiento = db.query(MovimientoInventario).options(
+        joinedload(MovimientoInventario.producto),
+        joinedload(MovimientoInventario.usuario),
+        joinedload(MovimientoInventario.sector),
+    ).filter(MovimientoInventario.id == movimiento_id).first()
+    if not movimiento:
+        raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+    if not is_staff(usuario):
+        scope = scoped_instalacion_ids(db, usuario)
+        if scope is not None and movimiento.sector_id not in scope:
+            raise HTTPException(status_code=403, detail="No tienes acceso a este movimiento")
+    return movimiento
+
+
 @router.get("/movimientos")
 def listar_movimientos(
     producto_id: int | None = None,
@@ -285,6 +305,15 @@ def listar_movimientos(
     ]
 
 
+@router.get("/movimientos/{movimiento_id}")
+def obtener_movimiento(
+    movimiento_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    return serializar_movimiento(_movimiento_visible(db, current_user, movimiento_id))
+
+
 @router.post("/movimientos", status_code=status.HTTP_201_CREATED)
 def registrar_movimiento(
     payload: MovimientoCreate,
@@ -317,6 +346,76 @@ def registrar_movimiento(
     return serializar_movimiento(movimiento)
 
 
+@router.put("/movimientos/{movimiento_id}")
+def actualizar_movimiento(
+    movimiento_id: int,
+    payload: MovimientoUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    """Corrige los metadatos de un movimiento sin alterar el stock."""
+    movimiento = _movimiento_visible(db, current_user, movimiento_id)
+    datos = payload.model_dump(exclude_unset=True)
+    sector_id = datos.get("sector_id")
+    if sector_id is not None:
+        if not db.query(Instalacion.id).filter(Instalacion.id == sector_id).first():
+            raise HTTPException(status_code=422, detail="Sector no encontrado")
+        require_instalacion_access(db, current_user, sector_id)
+    for campo, valor in datos.items():
+        setattr(movimiento, campo, valor)
+    db.commit()
+    db.refresh(movimiento)
+    return serializar_movimiento(movimiento)
+
+
+@router.delete("/movimientos/{movimiento_id}")
+def eliminar_movimiento(
+    movimiento_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    """Elimina un movimiento y revierte su efecto sobre el stock."""
+    movimiento = _movimiento_visible(db, current_user, movimiento_id)
+    producto = _producto(db, movimiento.producto_id)
+    if movimiento.tipo == "entrada":
+        if producto.stock < movimiento.cantidad:
+            raise HTTPException(
+                status_code=409,
+                detail="Stock insuficiente para revertir la entrada",
+            )
+        producto.stock -= movimiento.cantidad
+    elif movimiento.tipo == "salida":
+        producto.stock += movimiento.cantidad
+    else:
+        raise HTTPException(
+            status_code=409,
+            detail="Los ajustes no se pueden eliminar porque no registran el stock previo",
+        )
+    db.delete(movimiento)
+    db.commit()
+    return {"message": "Movimiento eliminado", "stock_actual": producto.stock}
+
+
+def _solicitud_visible(
+    db: Session, usuario: Usuario, solicitud_id: int
+) -> SolicitudInsumo:
+    solicitud = db.query(SolicitudInsumo).options(
+        joinedload(SolicitudInsumo.producto),
+        joinedload(SolicitudInsumo.solicitante),
+        joinedload(SolicitudInsumo.sector),
+    ).filter(SolicitudInsumo.id == solicitud_id).first()
+    if not solicitud:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if not is_staff(usuario):
+        if solicitud.solicitante_id != usuario.id:
+            raise HTTPException(status_code=403, detail="No tienes acceso a esta solicitud")
+    else:
+        scope = scoped_instalacion_ids(db, usuario)
+        if scope is not None and solicitud.sector_id not in scope:
+            raise HTTPException(status_code=403, detail="No tienes acceso a esta solicitud")
+    return solicitud
+
+
 @router.get("/solicitudes")
 def listar_solicitudes(
     estado: str | None = None,
@@ -340,6 +439,15 @@ def listar_solicitudes(
         serializar_solicitud(item)
         for item in query.order_by(SolicitudInsumo.fecha_creacion.desc()).all()
     ]
+
+
+@router.get("/solicitudes/{solicitud_id}")
+def obtener_solicitud(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    return serializar_solicitud(_solicitud_visible(db, current_user, solicitud_id))
 
 
 @router.post("/solicitudes", status_code=status.HTTP_201_CREATED)
@@ -414,6 +522,7 @@ def resolver_solicitud(
             solicitud.cantidad,
             f"Solicitud #{solicitud.id}: {payload.comentario or solicitud.motivo or ''}".strip(),
             solicitud.sector_id,
+            solicitud.id,
         )
     solicitud.estado = payload.estado
     solicitud.resuelto_por = current_user.id
@@ -432,3 +541,37 @@ def resolver_solicitud(
     db.commit()
     db.refresh(solicitud)
     return serializar_solicitud(solicitud)
+
+
+@router.delete("/solicitudes/{solicitud_id}")
+def eliminar_solicitud(
+    solicitud_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    solicitud = _solicitud_visible(db, current_user, solicitud_id)
+    if not is_staff(current_user) and solicitud.estado != "pendiente":
+        raise HTTPException(
+            status_code=409,
+            detail="Solo el personal puede eliminar solicitudes resueltas",
+        )
+    if solicitud.estado == "aprobada":
+        movimiento = db.query(MovimientoInventario).filter(
+            MovimientoInventario.solicitud_id == solicitud.id,
+            MovimientoInventario.tipo == "salida",
+        ).first()
+        if movimiento:
+            producto = _producto(db, movimiento.producto_id)
+            producto.stock += movimiento.cantidad
+            db.add(MovimientoInventario(
+                producto_id=movimiento.producto_id,
+                usuario_id=current_user.id,
+                tipo="entrada",
+                cantidad=movimiento.cantidad,
+                motivo=f"Reversión por eliminación de solicitud #{solicitud.id}",
+                sector_id=movimiento.sector_id,
+            ))
+            movimiento.solicitud_id = None
+    db.delete(solicitud)
+    db.commit()
+    return {"message": "Solicitud eliminada"}

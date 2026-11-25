@@ -30,12 +30,13 @@
                             <th>Usuario</th>
                             <th>Email</th>
                             <th>Rol</th>
+                            <th>Intentos</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr><td colspan="6" class="loading-row">Cargando usuarios…</td></tr>
+                        <tr><td colspan="7" class="loading-row">Cargando usuarios…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -82,6 +83,11 @@
                         <option value="encargado">Encargado de cultivo</option>
                         <option value="admin">Administrador</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="intentos_login_maximos">Intentos de login permitidos</label>
+                    <input type="number" id="intentos_login_maximos" min="1" max="100" value="5" required>
+                    <small>Máximo antes del bloqueo temporal. Cambiarlo reinicia los intentos actuales.</small>
                 </div>
                 <div class="form-group">
                     <label class="checkbox-label">

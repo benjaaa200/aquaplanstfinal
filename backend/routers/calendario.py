@@ -1,5 +1,5 @@
 """Calendario agrícola, mantenimientos e inspecciones."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
@@ -12,7 +12,12 @@ from backend.models import (
     Instalacion,
     Usuario,
 )
-from backend.schemas_ops import EventoCompletar, EventoCreate, EventoUpdate
+from backend.schemas_ops import (
+    EventoCompletar,
+    EventoCreate,
+    EventoEstadoUpdate,
+    EventoUpdate,
+)
 from backend.security import (
     get_current_active_user,
     require_admin,
@@ -25,16 +30,9 @@ from backend.services import (
     require_instalacion_access,
     scoped_instalacion_ids,
 )
+from backend.utils import naive_utc, utcnow
 
 router = APIRouter(prefix="/calendario", tags=["Calendario"])
-
-
-def _naive_utc(valor: datetime | None) -> datetime | None:
-    if not valor:
-        return None
-    if valor.tzinfo:
-        return valor.astimezone(timezone.utc).replace(tzinfo=None)
-    return valor
 
 
 def serializar(evento: EventoCalendario, detalle: bool = False) -> dict:
@@ -62,7 +60,7 @@ def serializar(evento: EventoCalendario, detalle: bool = False) -> dict:
         "fecha_creacion": evento.fecha_creacion,
         "atrasado": bool(
             evento.estado in ("programado", "en_ejecucion")
-            and _naive_utc(evento.fecha_inicio) < datetime.utcnow()
+            and naive_utc(evento.fecha_inicio) < utcnow()
         ),
     }
     if detalle and evento.incidencia:
@@ -145,8 +143,8 @@ def listar_eventos(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user),
 ):
-    fecha_inicio = _naive_utc(fecha_inicio)
-    fecha_fin = _naive_utc(fecha_fin)
+    fecha_inicio = naive_utc(fecha_inicio)
+    fecha_fin = naive_utc(fecha_fin)
     query = db.query(EventoCalendario).options(
         joinedload(EventoCalendario.sector),
         joinedload(EventoCalendario.cultivo),
@@ -179,7 +177,7 @@ def proximos_eventos(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user),
 ):
-    now = datetime.utcnow()
+    now = utcnow()
     query = _scope_query(
         db, current_user,
         db.query(EventoCalendario).filter(
@@ -205,7 +203,7 @@ def resumen_calendario(
 ):
     query = _scope_query(db, current_user, db.query(EventoCalendario))
     rows = query.all()
-    now = datetime.utcnow()
+    now = utcnow()
     return {
         "total": len(rows),
         "programados": sum(1 for row in rows if row.estado == "programado"),
@@ -213,19 +211,21 @@ def resumen_calendario(
         "completados": sum(1 for row in rows if row.estado == "completado"),
         "atrasados": sum(
             1 for row in rows
-            if row.estado in ("programado", "en_ejecucion") and row.fecha_inicio < now
+            if row.estado in ("programado", "en_ejecucion")
+            and naive_utc(row.fecha_inicio) < now
         ),
         "mantenimientos": sum(1 for row in rows if row.tipo == "mantenimiento"),
         "inspecciones": sum(1 for row in rows if row.tipo == "inspeccion"),
         "proximo": serializar(
             min(
                 (row for row in rows if row.estado in ("programado", "en_ejecucion")
-                 and row.fecha_inicio >= now),
-                key=lambda row: row.fecha_inicio,
+                 and naive_utc(row.fecha_inicio) >= now),
+                key=lambda row: naive_utc(row.fecha_inicio),
                 default=None,
             )
         ) if any(
-            row.estado in ("programado", "en_ejecucion") and row.fecha_inicio >= now
+            row.estado in ("programado", "en_ejecucion")
+            and naive_utc(row.fecha_inicio) >= now
             for row in rows
         ) else None,
     }
@@ -237,8 +237,8 @@ def crear_evento(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user),
 ):
-    payload.fecha_inicio = _naive_utc(payload.fecha_inicio)
-    payload.fecha_fin = _naive_utc(payload.fecha_fin)
+    payload.fecha_inicio = naive_utc(payload.fecha_inicio)
+    payload.fecha_fin = naive_utc(payload.fecha_fin)
     if payload.fecha_fin and payload.fecha_fin < payload.fecha_inicio:
         raise HTTPException(status_code=422, detail="La fecha de fin no puede ser anterior al inicio")
     _validar(
@@ -305,7 +305,7 @@ def actualizar_evento(
     cambios = payload.model_dump(exclude_unset=True)
     for campo in ("fecha_inicio", "fecha_fin"):
         if campo in cambios:
-            cambios[campo] = _naive_utc(cambios[campo])
+            cambios[campo] = naive_utc(cambios[campo])
     fecha_inicio = cambios.get("fecha_inicio", evento.fecha_inicio)
     fecha_fin = cambios.get("fecha_fin", evento.fecha_fin)
     if fecha_fin and fecha_inicio and fecha_fin < fecha_inicio:
@@ -326,19 +326,16 @@ def actualizar_evento(
 @router.patch("/eventos/{evento_id}/estado")
 def cambiar_estado_evento(
     evento_id: int,
-    payload: dict,
+    payload: EventoEstadoUpdate,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user),
 ):
     evento = _evento_con_acceso(db, current_user, evento_id)
     if not is_staff(current_user) and evento.responsable_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el responsable puede cambiar el estado")
-    estado = payload.get("estado")
-    if estado not in ("programado", "en_ejecucion", "completado", "atrasado", "cancelado"):
-        raise HTTPException(status_code=422, detail="Estado inválido")
-    evento.estado = estado
-    if estado == "completado" and not evento.fecha_realizacion:
-        evento.fecha_realizacion = datetime.utcnow()
+    evento.estado = payload.estado
+    if payload.estado == "completado" and not evento.fecha_realizacion:
+        evento.fecha_realizacion = utcnow()
     db.commit()
     db.refresh(evento)
     return serializar(evento)
@@ -355,7 +352,7 @@ def completar_evento(
     if not is_staff(current_user) and evento.responsable_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el responsable puede completar este evento")
     evento.estado = "completado"
-    evento.fecha_realizacion = _naive_utc(payload.fecha_realizacion) or datetime.utcnow()
+    evento.fecha_realizacion = naive_utc(payload.fecha_realizacion) or utcnow()
     evento.resultado = payload.resultado
     evento.observaciones = payload.observaciones
     evento.recomendaciones = payload.recomendaciones

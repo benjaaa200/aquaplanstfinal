@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -17,9 +17,10 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME", "postgres")
 }
 
-if not DB_CONFIG["user"] or not DB_CONFIG["password"]:
+DATABASE_URL_ENV = os.getenv("DATABASE_URL", "").strip()
+if not DATABASE_URL_ENV and (not DB_CONFIG["user"] or not DB_CONFIG["password"]):
     raise RuntimeError(
-        "Configura DB_USER y DB_PASSWORD en el entorno o en el archivo .env."
+        "Configura DATABASE_URL o DB_USER y DB_PASSWORD en el entorno/.env."
     )
 
 # TLS hacia PostgreSQL. RDS exige al menos "require"; en local/Docker sin TLS
@@ -107,15 +108,34 @@ DATABASE_QUERY = {
 if DB_SSLROOTCERT:
     DATABASE_QUERY["sslrootcert"] = DB_SSLROOTCERT
 
-DATABASE_URL = URL.create(
-    "postgresql+psycopg",
-    username=DB_CONFIG["user"],
-    password=DB_CONFIG["password"],
-    host=DB_CONFIG["host"],
-    port=DB_CONFIG["port"],
-    database=DB_CONFIG["database"],
-    query=DATABASE_QUERY,
-)
+if DATABASE_URL_ENV:
+    parsed_url = make_url(DATABASE_URL_ENV)
+    if not all((
+        parsed_url.host,
+        parsed_url.username,
+        parsed_url.password,
+        parsed_url.database,
+    )):
+        raise RuntimeError(
+            "DATABASE_URL debe incluir host, usuario, contraseña y base de datos."
+        )
+    render_query = dict(parsed_url.query or {})
+    render_query.update(DATABASE_QUERY)
+    if DB_SSLROOTCERT:
+        render_query["sslrootcert"] = DB_SSLROOTCERT
+    DATABASE_URL = parsed_url.set(
+        drivername="postgresql+psycopg", query=render_query
+    )
+else:
+    DATABASE_URL = URL.create(
+        "postgresql+psycopg",
+        username=DB_CONFIG["user"],
+        password=DB_CONFIG["password"],
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        database=DB_CONFIG["database"],
+        query=DATABASE_QUERY,
+    )
 
 # ============================================
 # RECUPERACIÓN DE CONTRASEÑA

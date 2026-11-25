@@ -1,5 +1,5 @@
 """Informes de rendimiento calculados a partir de registros reales."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -17,21 +17,15 @@ from backend.models import (
 )
 from backend.security import get_current_active_user, visible_cultivo_ids
 from backend.services import is_staff, scoped_instalacion_ids
+from backend.utils import naive_utc, utcnow
 
 router = APIRouter(prefix="/rendimiento", tags=["Rendimiento"])
 
 ESTADOS_TAREA_ABIERTOS = ("pendiente", "en_progreso", "en_revision", "atrasada")
 
 
-def _naive_utc(valor: datetime | None) -> datetime | None:
-    if not valor:
-        return None
-    if valor.tzinfo:
-        return valor.astimezone(timezone.utc).replace(tzinfo=None)
-    return valor
-
-
 def _en_rango(valor, inicio, fin) -> bool:
+    valor = naive_utc(valor)
     if not valor:
         return False
     if inicio and valor < inicio:
@@ -43,7 +37,7 @@ def _en_rango(valor, inicio, fin) -> bool:
 
 def _meses(inicio: datetime | None, fin: datetime | None) -> list[tuple[str, datetime, datetime]]:
     if not fin:
-        fin = datetime.utcnow()
+        fin = utcnow()
     if not inicio:
         inicio = (fin.replace(day=1) - timedelta(days=31 * 5)).replace(day=1)
     buckets = []
@@ -68,8 +62,8 @@ def informe_rendimiento(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user),
 ):
-    fecha_inicio = _naive_utc(fecha_inicio)
-    fecha_fin = _naive_utc(fecha_fin)
+    fecha_inicio = naive_utc(fecha_inicio)
+    fecha_fin = naive_utc(fecha_fin)
     cache_key = (
         "rendimiento",
         db.get_bind(),
@@ -270,12 +264,12 @@ def informe_rendimiento(
             ), 2),
         })
 
-    ahora = datetime.utcnow()
+    ahora = utcnow()
     pendientes = sum(1 for row in tareas if row.estado in ESTADOS_TAREA_ABIERTOS)
     atrasadas = sum(
         1 for row in tareas
         if row.estado in ESTADOS_TAREA_ABIERTOS
-        and row.fecha_limite and row.fecha_limite < ahora
+        and row.fecha_limite and naive_utc(row.fecha_limite) < ahora
     )
     resumen = [
         f"{sum(1 for row in cultivos if row.estado == 'activo')} cultivos activos "

@@ -24,6 +24,7 @@ from backend.cache import (
 )
 from backend.config import (
     FRONTEND_URL,
+    LOGIN_MAX_ATTEMPTS,
     LOGIN_WINDOW_SECONDS,
     PASSWORD_RESET_CODE_MINUTES,
     PASSWORD_RESET_LINK_MINUTES,
@@ -142,14 +143,25 @@ def login(
     """
     HU-01: Endpoint de login que valida credenciales y retorna JWT.
 
-    Los intentos fallidos se limitan por identificador (usuario/IP) y por IP
-    para frenar ataques de fuerza bruta y pulverización de credenciales.
+    Los intentos fallidos se limitan por identificador (usuario/IP), por el
+    máximo configurado para cada usuario y por IP para frenar ataques de fuerza
+    bruta y pulverización de credenciales.
     """
     ip = request.client.host if request.client else "desconocida"
-    identifier_key = f"{ip}:{form_data.username.strip().lower()}"
+    username = form_data.username.strip()
+    identifier_key = f"{ip}:{username.lower()}"
+
+    # Buscar usuario por username O email para aplicar su límite configurado.
+    user = db.query(Usuario).filter(
+        (Usuario.username == username) |
+        (Usuario.email == username)
+    ).first()
+    max_intentos = (
+        user.intentos_login_maximos if user else LOGIN_MAX_ATTEMPTS
+    )
 
     if not login_ip_limiter.allow(ip) or not login_identifier_limiter.allow(
-        identifier_key
+        identifier_key, limit=max_intentos
     ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -159,12 +171,6 @@ def login(
             ),
             headers={"Retry-After": str(LOGIN_WINDOW_SECONDS)},
         )
-
-    # Buscar usuario por username O email
-    user = db.query(Usuario).filter(
-        (Usuario.username == form_data.username) | 
-        (Usuario.email == form_data.username)
-    ).first()
 
     # Validar credenciales (mensaje genérico por seguridad)
     if not user:
@@ -296,6 +302,7 @@ def change_password(
         )
 
     current_user.hashed_password = get_password_hash(payload.new_password)
+    current_user.token_version = (current_user.token_version or 0) + 1
     db.commit()
     return {"message": "Contraseña actualizada correctamente"}
 

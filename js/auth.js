@@ -93,7 +93,7 @@ async function handleFetchResponse(response) {
 // ============================================================
 (function () {
     const loginPath = function () {
-        return /\/pages\/|\/admin\//.test(location.pathname) ? '../index.html' : 'index.html';
+        return /\/pages\/|\/admin\/|\/simulador\//.test(location.pathname) ? '../index.html' : 'index.html';
     };
 
     window.AquaAuth = {

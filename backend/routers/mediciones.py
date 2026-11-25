@@ -89,6 +89,7 @@ def _umbrales_para_cultivo(db: Session, cultivo: Cultivo):
                 else umbrales[umbral.variable]["unidad"],
                 "minimo": umbral.valor_minimo,
                 "maximo": umbral.valor_maximo,
+                "valor_alerta": umbral.valor_alerta,
             }
         )
     return umbrales
@@ -97,10 +98,13 @@ def _umbrales_para_cultivo(db: Session, cultivo: Cultivo):
 def _evaluar_variable(variable, valor, config):
     minimo = config.get("minimo")
     maximo = config.get("maximo")
+    valor_alerta = config.get("valor_alerta")
     severidad = SEVERIDAD_POR_VARIABLE.get(variable, "warning")
     unidad = config.get("unidad") or ""
 
     if minimo is not None and valor < minimo:
+        if valor_alerta is not None and valor < valor_alerta:
+            severidad = "critical"
         return (
             severidad,
             f"{config['nombre']}: {valor}{unidad} por debajo del mínimo "
@@ -108,6 +112,8 @@ def _evaluar_variable(variable, valor, config):
             minimo,
         )
     if maximo is not None and valor > maximo:
+        if valor_alerta is not None and valor > valor_alerta:
+            severidad = "critical"
         return (
             severidad,
             f"{config['nombre']}: {valor}{unidad} supera el máximo "

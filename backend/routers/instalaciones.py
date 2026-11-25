@@ -24,7 +24,8 @@ def _responsable(db: Session, responsable_id: int | None) -> None:
     if responsable_id is None:
         return
     user = db.query(Usuario).filter(Usuario.id == responsable_id).first()
-    if not user or not user.activo or (user.rol or "").lower() != "encargado":
+    roles = {"encargado", "supervisor"}
+    if not user or not user.activo or (user.rol or "").lower() not in roles:
         raise HTTPException(status_code=422, detail="Responsable inválido")
 
 

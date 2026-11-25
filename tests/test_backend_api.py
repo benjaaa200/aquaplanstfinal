@@ -18,6 +18,7 @@ from backend.database import (
     Base,
     ensure_alert_resolution_columns,
     ensure_crop_installation_column,
+    ensure_usuario_login_attempts_column,
     get_db,
 )
 from backend.models import (
@@ -333,6 +334,32 @@ def test_crop_installation_migration_is_additive_and_idempotent():
         engine.dispose()
 
 
+def test_usuario_login_attempts_migration_is_additive_and_idempotent():
+    engine = create_engine("sqlite://")
+    try:
+        with engine.begin() as connection:
+            connection.exec_driver_sql(
+                "CREATE TABLE usuarios (id INTEGER PRIMARY KEY, username VARCHAR(100))"
+            )
+            connection.exec_driver_sql(
+                "INSERT INTO usuarios (id, username) VALUES (1, 'Existente')"
+            )
+
+        ensure_usuario_login_attempts_column(engine)
+        ensure_usuario_login_attempts_column(engine)
+
+        inspector = inspect(engine)
+        assert "intentos_login_maximos" in {
+            column["name"] for column in inspector.get_columns("usuarios")
+        }
+        with engine.connect() as connection:
+            assert connection.exec_driver_sql(
+                "SELECT intentos_login_maximos FROM usuarios WHERE id = 1"
+            ).scalar_one() == 5
+    finally:
+        engine.dispose()
+
+
 def test_health_checks_database(api):
     client, _ = api
     response = client.get("/api/health")
@@ -381,6 +408,7 @@ def test_admin_user_creation_validates_password_and_normalizes_role(api):
         "nombre_completo": "New Admin",
         "password": TEST_PASSWORD,
         "rol": "admin",
+        "activo": False,
     }
 
     weak_user = {**user, "password": "short"}
@@ -391,6 +419,7 @@ def test_admin_user_creation_validates_password_and_normalizes_role(api):
     users = client.get(endpoint, headers=auth).json()
     created = next(record for record in users if record["username"] == "new-admin")
     assert created["rol"] == "administrador"
+    assert created["activo"] is False
     assert "hashed_password" not in created
 
 
@@ -721,13 +750,14 @@ def test_current_user_profile_and_password_change(api):
         },
     )
     assert changed.status_code == 200
-    assert client.post(
+    nuevo_token = client.post(
         "/api/auth/login",
         data={"username": "encargado", "password": new_password},
-    ).status_code == 200
+    ).json()["access_token"]
+    assert client.get("/api/auth/me", headers=auth).status_code == 401
     assert client.put(
         "/api/auth/change-password",
-        headers=auth,
+        headers=headers(nuevo_token),
         json={
             "current_password": "incorrecta",
             "new_password": "otra-clave-segura-123",
@@ -975,6 +1005,39 @@ def test_thresholds_crud_and_alert_generation(api):
         and item["entidad_tipo"] == "alerta"
         for item in notificaciones
     )
+
+    critico = client.post(
+        "/api/umbrales/",
+        headers=admin_auth,
+        json={
+            "variable": "humedad",
+            "nombre": "Humedad crítica de prueba",
+            "unidad": "%",
+            "valor_maximo": 65,
+            "valor_alerta": 70,
+            "cultivo_id": crop["id"],
+        },
+    )
+    assert critico.status_code == 201, critico.json()
+    client.post(
+        "/api/mediciones/",
+        headers=encargado_auth,
+        json={
+            "cultivo_id": crop["id"],
+            "temperatura": 20,
+            "humedad": 75,
+            "nivel_agua": 50,
+            "ph": 6.4,
+            "conductividad": 900,
+        },
+    )
+    assert any(
+        alert["tipo"] == "humedad" and alert["severidad"] == "critical"
+        for alert in client.get("/api/alertas/", headers=encargado_auth).json()
+    )
+    assert client.delete(
+        f"/api/umbrales/{critico.json()['id']}", headers=admin_auth
+    ).status_code == 204
 
     disabled = client.patch(
         f"/api/umbrales/{umbral_id}/estado",
@@ -1235,6 +1298,18 @@ def test_operations_modules_flow(api):
     assert completado.status_code == 200
     assert completado.json()["estado"] == "completado"
     assert completado.json()["incidencia_generada"]["id"] > 0
+    assert client.patch(
+        f"/api/calendario/eventos/{evento_id}/estado",
+        headers=encargado,
+        json={"estado": "estado-invalido"},
+    ).status_code == 422
+    estado_completado = client.patch(
+        f"/api/calendario/eventos/{evento_id}/estado",
+        headers=encargado,
+        json={"estado": "completado"},
+    )
+    assert estado_completado.status_code == 200, estado_completado.json()
+    assert estado_completado.json()["estado"] == "completado"
     assert client.get("/api/calendario/resumen", headers=admin).status_code == 200
 
     enviado = client.post(
@@ -1475,6 +1550,56 @@ def test_login_rate_limit_returns_429_with_retry_after(api):
     assert blocked.status_code == 429
     assert blocked.headers["Retry-After"].isdigit()
     assert blocked.json()["detail"].startswith("Demasiados intentos")
+
+
+def test_admin_configura_intentos_login_por_usuario(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+    usuarios = client.get("/api/usuarios/", headers=admin).json()
+    objetivo = next(u for u in usuarios if u["username"] == "encargado")
+    assert objetivo["intentos_login_maximos"] == 5
+
+    actualizado = client.put(
+        f"/api/usuarios/{objetivo['id']}",
+        headers=admin,
+        json={"intentos_login_maximos": 2},
+    )
+    assert actualizado.status_code == 200, actualizado.json()
+    assert actualizado.json()["intentos_login_maximos"] == 2
+
+    for _ in range(2):
+        assert client.post(
+            "/api/auth/login",
+            data={"username": "encargado", "password": "clave-incorrecta"},
+        ).status_code == 401
+
+    bloqueado = client.post(
+        "/api/auth/login",
+        data={"username": "encargado", "password": "clave-incorrecta"},
+    )
+    assert bloqueado.status_code == 429
+    assert bloqueado.headers["Retry-After"].isdigit()
+
+    reinicio = client.post(
+        f"/api/usuarios/{objetivo['id']}/reset-intentos", headers=admin
+    )
+    assert reinicio.status_code == 200, reinicio.json()
+    assert reinicio.json()["reiniciadas"] == 1
+    assert client.post(
+        "/api/auth/login",
+        data={"username": "encargado", "password": TEST_PASSWORD},
+    ).status_code == 200
+
+    assert client.put(
+        f"/api/usuarios/{objetivo['id']}",
+        headers=admin,
+        json={"intentos_login_maximos": 0},
+    ).status_code == 422
+    assert client.put(
+        f"/api/usuarios/{objetivo['id']}",
+        headers=headers(tokens["encargado"]),
+        json={"intentos_login_maximos": 3},
+    ).status_code == 403
 
 
 def test_successful_login_clears_identifier_counter(api):
@@ -1968,3 +2093,368 @@ def test_device_connection_check_requires_ip_and_admin(api):
         },
     )
     assert invalida.status_code == 422
+
+
+def test_cultivo_detalle_y_actualizacion(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+    encargado = headers(tokens["encargado"])
+
+    creado = client.post(
+        "/api/cultivos/",
+        headers=admin,
+        json={"nombre": "Cultivo CRUD", "fecha_inicio": "2026-01-01T00:00:00"},
+    )
+    assert creado.status_code == 201, creado.json()
+    cultivo_id = creado.json()["id"]
+
+    detalle = client.get(f"/api/cultivos/{cultivo_id}", headers=admin)
+    assert detalle.status_code == 200
+    assert detalle.json()["nombre"] == "Cultivo CRUD"
+    assert client.get(f"/api/cultivos/{cultivo_id}", headers=encargado).status_code == 403
+    assert client.get("/api/cultivos/99999", headers=admin).status_code == 404
+
+    actualizado = client.put(
+        f"/api/cultivos/{cultivo_id}",
+        headers=admin,
+        json={"nombre": "Cultivo editado", "tipo_planta": "Espinaca"},
+    )
+    assert actualizado.status_code == 200, actualizado.json()
+    assert actualizado.json()["tipo_planta"] == "Espinaca"
+    assert client.put(
+        f"/api/cultivos/{cultivo_id}",
+        headers=admin,
+        json={"instalacion_id": 99999},
+    ).status_code == 422
+    assert client.put(
+        f"/api/cultivos/{cultivo_id}", headers=encargado, json={"nombre": "No"}
+    ).status_code == 403
+    assert client.delete(f"/api/cultivos/{cultivo_id}", headers=admin).status_code == 204
+    assert client.get(f"/api/cultivos/{cultivo_id}", headers=admin).status_code == 404
+
+
+def test_usuario_detalle_y_id_en_creacion(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+
+    creado = client.post(
+        "/api/usuarios/",
+        headers=admin,
+        json={
+            "username": "detalle-usuario",
+            "email": "detalle@ejemplo.com",
+            "nombre_completo": "Detalle Usuario",
+            "rol": "encargado",
+            "password": "Clave-Segura-12345!",
+        },
+    )
+    assert creado.status_code == 201, creado.json()
+    usuario_id = creado.json()["id"]
+    assert creado.json()["user_id"] == usuario_id
+
+    detalle = client.get(f"/api/usuarios/{usuario_id}", headers=admin)
+    assert detalle.status_code == 200
+    assert "hashed_password" not in detalle.json()
+    assert detalle.json()["intentos_login_maximos"] == 5
+    assert client.get(
+        f"/api/usuarios/{usuario_id}", headers=headers(tokens["encargado"])
+    ).status_code == 403
+    assert client.get("/api/usuarios/99999", headers=admin).status_code == 404
+    assert client.delete(f"/api/usuarios/{usuario_id}", headers=admin).status_code == 204
+
+
+def test_alerta_manual_y_detalle(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+    encargado = headers(tokens["encargado"])
+    sin_asignacion = headers(tokens["sin-asignacion"])
+
+    creada = client.post(
+        "/api/alertas/",
+        headers=admin,
+        json={
+            "tipo": "ph",
+            "severidad": "warning",
+            "mensaje": "Alerta creada manualmente",
+            "valor_detectado": 8.2,
+            "umbral": 7.5,
+            "cultivo_id": 1,
+        },
+    )
+    assert creada.status_code == 201, creada.json()
+    alerta_id = creada.json()["id"]
+    assert creada.json()["resuelta"] is False
+
+    detalle = client.get(f"/api/alertas/{alerta_id}", headers=encargado)
+    assert detalle.status_code == 200
+    assert detalle.json()["mensaje"] == "Alerta creada manualmente"
+    assert client.get(f"/api/alertas/{alerta_id}", headers=sin_asignacion).status_code == 403
+    assert client.get("/api/alertas/99999", headers=admin).status_code == 404
+    assert client.post(
+        "/api/alertas/", headers=encargado,
+        json={"tipo": "ph", "severidad": "warning", "mensaje": "No", "cultivo_id": 1},
+    ).status_code == 403
+    assert client.delete(f"/api/alertas/{alerta_id}", headers=admin).status_code == 204
+
+
+def test_notificacion_detalle_y_actualizacion(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+    encargado = headers(tokens["encargado"])
+
+    enviado = client.post(
+        "/api/notificaciones/enviar",
+        headers=admin,
+        json={
+            "titulo": "Aviso CRUD",
+            "mensaje": "Revisa el módulo",
+            "prioridad": "importante",
+            "categoria": "sistema",
+            "roles": ["encargado"],
+        },
+    )
+    assert enviado.status_code == 201, enviado.json()
+    notificaciones = client.get("/api/notificaciones/", headers=encargado).json()
+    notificacion_id = next(
+        item["id"] for item in notificaciones if item["titulo"] == "Aviso CRUD"
+    )
+
+    detalle = client.get(f"/api/notificaciones/{notificacion_id}", headers=encargado)
+    assert detalle.status_code == 200
+    assert detalle.json()["leida"] is False
+    assert client.get(f"/api/notificaciones/{notificacion_id}", headers=admin).status_code == 404
+
+    actualizada = client.put(
+        f"/api/notificaciones/{notificacion_id}",
+        headers=encargado,
+        json={"titulo": "Aviso editado", "leida": True, "prioridad": "info"},
+    )
+    assert actualizada.status_code == 200, actualizada.json()
+    assert actualizada.json()["leida"] is True
+    assert actualizada.json()["titulo"] == "Aviso CRUD"
+    assert actualizada.json()["prioridad"] == "importante"
+    assert client.put(
+        f"/api/notificaciones/{notificacion_id}",
+        headers=encargado,
+        json={"titulo": "x"},
+    ).status_code == 422
+    assert client.delete(
+        f"/api/notificaciones/{notificacion_id}", headers=encargado
+    ).status_code == 204
+    assert client.get(f"/api/notificaciones/{notificacion_id}", headers=encargado).status_code == 404
+
+
+def test_riego_programaciones_crud_y_borrado_de_zona(api):
+    client, tokens = api
+    encargado = headers(tokens["encargado"])
+    zona = client.get("/api/riego/zonas", headers=encargado).json()[0]
+    zona_id = zona["id"]
+
+    creada = client.post(
+        "/api/riego/programar",
+        headers=encargado,
+        json={
+            "zona_id": zona_id,
+            "hora_inicio": "06:30",
+            "duracion": 20,
+            "frecuencia": "diario",
+        },
+    )
+    assert creada.status_code == 201, creada.json()
+    programacion_id = creada.json()["id"]
+
+    listado = client.get("/api/riego/programaciones", headers=encargado)
+    assert listado.status_code == 200
+    assert any(item["id"] == programacion_id for item in listado.json())
+
+    detalle = client.get(f"/api/riego/programaciones/{programacion_id}", headers=encargado)
+    assert detalle.status_code == 200
+    assert detalle.json()["duracion"] == 20
+
+    actualizada = client.put(
+        f"/api/riego/programaciones/{programacion_id}",
+        headers=encargado,
+        json={"hora_inicio": "07:15", "duracion": 25, "activa": False},
+    )
+    assert actualizada.status_code == 200, actualizada.json()
+    assert actualizada.json()["hora_inicio"] == "07:15"
+    assert actualizada.json()["duracion"] == 25
+    assert actualizada.json()["activa"] is False
+    assert client.get(
+        f"/api/riego/programaciones/{programacion_id}", headers=encargado
+    ).json()["duracion"] == 25
+    assert client.put(
+        f"/api/riego/programaciones/{programacion_id}",
+        headers=encargado,
+        json={"duracion": 121},
+    ).status_code == 422
+
+    assert client.delete(
+        f"/api/riego/programaciones/{programacion_id}", headers=encargado
+    ).status_code == 204
+    assert client.delete(f"/api/riego/zonas/{zona_id}", headers=encargado).status_code == 204
+    assert client.delete(f"/api/riego/zonas/{zona_id}", headers=encargado).status_code == 404
+
+
+def test_inventario_movimientos_y_solicitudes_crud(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+    encargado = headers(tokens["encargado"])
+
+    producto = client.post(
+        "/api/inventario/productos",
+        headers=admin,
+        json={
+            "nombre": "Producto CRUD", "codigo": "CRUD-001",
+            "unidad": "kg", "stock": 10, "stock_minimo": 1,
+        },
+    )
+    assert producto.status_code == 201, producto.json()
+    producto_id = producto.json()["id"]
+
+    entrada = client.post(
+        "/api/inventario/movimientos",
+        headers=admin,
+        json={"producto_id": producto_id, "tipo": "entrada", "cantidad": 5},
+    )
+    assert entrada.status_code == 201, entrada.json()
+    movimiento_id = entrada.json()["id"]
+
+    detalle = client.get(f"/api/inventario/movimientos/{movimiento_id}", headers=admin)
+    assert detalle.status_code == 200
+    editado = client.put(
+        f"/api/inventario/movimientos/{movimiento_id}",
+        headers=admin,
+        json={"motivo": "Corrección"},
+    )
+    assert editado.status_code == 200
+    assert editado.json()["motivo"] == "Corrección"
+    borrado = client.delete(f"/api/inventario/movimientos/{movimiento_id}", headers=admin)
+    assert borrado.status_code == 200
+    assert borrado.json()["stock_actual"] == 10
+    assert client.get(f"/api/inventario/movimientos/{movimiento_id}", headers=admin).status_code == 404
+
+    solicitud = client.post(
+        "/api/inventario/solicitudes",
+        headers=encargado,
+        json={"producto_id": producto_id, "cantidad": 2, "motivo": "Reposición"},
+    )
+    assert solicitud.status_code == 201, solicitud.json()
+    solicitud_id = solicitud.json()["id"]
+    assert client.get(f"/api/inventario/solicitudes/{solicitud_id}", headers=encargado).status_code == 200
+    assert client.delete(f"/api/inventario/solicitudes/{solicitud_id}", headers=encargado).status_code == 200
+
+    aprobada = client.post(
+        "/api/inventario/solicitudes",
+        headers=encargado,
+        json={"producto_id": producto_id, "cantidad": 1, "motivo": "Reposición"},
+    )
+    solicitud_id = aprobada.json()["id"]
+    assert client.put(
+        f"/api/inventario/solicitudes/{solicitud_id}",
+        headers=admin,
+        json={"estado": "aprobada"},
+    ).status_code == 200
+
+    def stock_actual():
+        productos = client.get("/api/inventario/productos", headers=admin).json()
+        return next(item["stock"] for item in productos if item["id"] == producto_id)
+
+    assert stock_actual() == 9
+    assert client.delete(f"/api/inventario/solicitudes/{solicitud_id}", headers=encargado).status_code == 409
+    assert client.delete(f"/api/inventario/solicitudes/{solicitud_id}", headers=admin).status_code == 200
+    assert stock_actual() == 10
+    movimientos = client.get("/api/inventario/movimientos", headers=admin).json()
+    assert any(
+        item["tipo"] == "entrada"
+        and item["motivo"] == f"Reversión por eliminación de solicitud #{solicitud_id}"
+        for item in movimientos
+    )
+
+
+def test_reporte_historial_actualizacion(api):
+    client, tokens = api
+    encargado = headers(tokens["encargado"])
+    sin_asignacion = headers(tokens["sin-asignacion"])
+    cultivo_id = client.get("/api/cultivos/", headers=encargado).json()[0]["id"]
+    params = {
+        "tipo": "mediciones",
+        "cultivo_id": cultivo_id,
+        "fecha_inicio": "2025-01-01T00:00:00",
+        "fecha_fin": "2027-01-01T00:00:00",
+        "formato": "csv",
+        "total_registros": 1,
+        "tamano_bytes": 100,
+    }
+
+    creado = client.post("/api/reportes/historial", headers=encargado, json=params)
+    assert creado.status_code == 201, creado.json()
+    reporte_id = creado.json()["id"]
+
+    actualizado = client.put(
+        f"/api/reportes/historial/{reporte_id}",
+        headers=encargado,
+        json={"formato": "pdf", "total_registros": 9},
+    )
+    assert actualizado.status_code == 200, actualizado.json()
+    assert actualizado.json()["formato"] == "pdf"
+    assert actualizado.json()["total_registros"] == 9
+    assert actualizado.json()["cultivo_id"] == cultivo_id
+    limpio = client.put(
+        f"/api/reportes/historial/{reporte_id}",
+        headers=encargado,
+        json={"cultivo_id": None},
+    )
+    assert limpio.status_code == 200, limpio.json()
+    assert limpio.json()["cultivo_id"] is None
+    assert client.put(
+        f"/api/reportes/historial/{reporte_id}",
+        headers=encargado,
+        json={"fecha_inicio": "2028-01-01T00:00:00"},
+    ).status_code == 422
+    assert client.put(
+        f"/api/reportes/historial/{reporte_id}",
+        headers=sin_asignacion,
+        json={"formato": "excel"},
+    ).status_code == 403
+    assert client.delete(f"/api/reportes/historial/{reporte_id}", headers=encargado).status_code == 204
+
+
+def test_mapa_configuracion_crud(api):
+    client, tokens = api
+    admin = headers(tokens["admin"])
+    sin_asignacion = headers(tokens["sin-asignacion"])
+
+    sector = client.post(
+        "/api/instalaciones/",
+        headers=admin,
+        json={"nombre": "Sector CRUD Mapa", "ubicacion": "Oeste"},
+    )
+    assert sector.status_code == 201, sector.json()
+    sector_id = sector.json()["id"]
+    payload = {
+        "posicion_x": 2, "posicion_y": 3, "ancho": 4, "alto": 2,
+        "tipo_sector": "bomba", "color": "#112233",
+    }
+
+    assert client.get(f"/api/mapa/config/{sector_id}", headers=admin).status_code == 404
+    creada = client.post(f"/api/mapa/config/{sector_id}", headers=admin, json=payload)
+    assert creada.status_code == 201, creada.json()
+    assert creada.json()["tipo_sector"] == "bomba"
+    assert client.post(f"/api/mapa/config/{sector_id}", headers=admin, json=payload).status_code == 409
+
+    detalle = client.get(f"/api/mapa/config/{sector_id}", headers=admin)
+    assert detalle.status_code == 200
+    assert detalle.json()["ancho"] == 4
+    assert client.get(
+        f"/api/mapa/config/{sector_id}", headers=sin_asignacion
+    ).status_code == 403
+    actualizada = client.put(
+        f"/api/mapa/config/{sector_id}", headers=admin, json={"color": "#445566"}
+    )
+    assert actualizada.status_code == 200
+    assert actualizada.json()["color"] == "#445566"
+    assert actualizada.json()["ancho"] == 4
+    assert actualizada.json()["tipo_sector"] == "bomba"
+    assert client.delete(f"/api/mapa/config/{sector_id}", headers=admin).status_code == 204
+    assert client.get(f"/api/mapa/config/{sector_id}", headers=admin).status_code == 404

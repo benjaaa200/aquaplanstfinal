@@ -10,6 +10,8 @@ from typing import Literal
 from typing import Optional
 from datetime import datetime
 
+from backend.config import LOGIN_MAX_ATTEMPTS
+
 _HOSTNAME_RE = re.compile(
     r"^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*"
     r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"
@@ -37,12 +39,20 @@ def _normalizar_direccion_ip(value: Optional[str]) -> Optional[str]:
 # ==========================================
 class UsuarioBase(BaseModel):
     email: EmailStr
-    username: str
-    nombre_completo: Optional[str] = None
+    username: str = Field(min_length=3, max_length=100)
+    nombre_completo: Optional[str] = Field(default=None, max_length=255)
+    email_respaldo: Optional[EmailStr] = None
+    telefono_respaldo: Optional[str] = Field(default=None, max_length=32)
     rol: str = "encargado"
+    activo: bool = True
+    intentos_login_maximos: int = Field(
+        default=LOGIN_MAX_ATTEMPTS, ge=1, le=100
+    )
 
 class UsuarioCreate(UsuarioBase):
     password: str = Field(min_length=12, max_length=128)
+    nombre_completo: str = Field(min_length=1, max_length=255)
+    rol: Literal["admin", "administrador", "supervisor", "encargado"] = "encargado"
 
 class UsuarioUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -52,6 +62,7 @@ class UsuarioUpdate(BaseModel):
     nombre_completo: Optional[str] = Field(default=None, min_length=1, max_length=255)
     rol: Optional[Literal["admin", "administrador", "supervisor", "encargado"]] = None
     activo: Optional[bool] = None
+    intentos_login_maximos: Optional[int] = Field(default=None, ge=1, le=100)
     password: Optional[str] = Field(default=None, min_length=12, max_length=128)
 
 
@@ -344,6 +355,18 @@ class ReporteCreate(BaseModel):
     formato: Literal["csv", "pdf", "excel"] = "csv"
     total_registros: int = Field(default=0, ge=0)
     tamano_bytes: int = Field(default=0, ge=0)
+
+
+class ReporteUpdate(BaseModel):
+    tipo: Optional[
+        Literal["mediciones", "alertas", "riego", "cultivos", "dispositivos"]
+    ] = None
+    cultivo_id: Optional[int] = Field(default=None, gt=0)
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin: Optional[datetime] = None
+    formato: Optional[Literal["csv", "pdf", "excel"]] = None
+    total_registros: Optional[int] = Field(default=None, ge=0)
+    tamano_bytes: Optional[int] = Field(default=None, ge=0)
 
 
 class ReporteResponse(ReporteCreate):

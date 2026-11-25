@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import BaseModel, EmailStr, Field
-from typing import Literal, Optional
+from pydantic import BaseModel, Field
+from backend.cache import login_identifier_limiter
 from backend.database import get_db
 from backend.models import (
     Cultivo,
@@ -11,7 +11,7 @@ from backend.models import (
     Usuario,
     UsuarioCultivo,
 )
-from backend.schemas import UsuarioUpdate
+from backend.schemas import UsuarioCreate, UsuarioUpdate
 from backend.security import get_password_hash, is_admin, require_admin
 
 router = APIRouter(prefix="/usuarios", tags=["Gestión de Usuarios"])
@@ -31,16 +31,6 @@ def listar_encargados(
         for user in users
     ]
 
-class UsuarioCreate(BaseModel):
-    username: str = Field(min_length=3, max_length=100)
-    email: EmailStr
-    email_respaldo: Optional[EmailStr] = None
-    telefono_respaldo: Optional[str] = Field(default=None, max_length=32)
-    nombre_completo: str = Field(min_length=1, max_length=255)
-    password: str = Field(min_length=12, max_length=128)
-    rol: Literal["admin", "administrador", "supervisor", "encargado"]
-
-
 class UsuarioCultivosUpdate(BaseModel):
     cultivo_ids: list[int] = Field(default_factory=list)
 
@@ -59,8 +49,31 @@ def get_usuarios(
         "telefono_respaldo": u.telefono_respaldo,
         "nombre_completo": u.nombre_completo, 
         "rol": u.rol, 
-        "activo": u.activo
+        "activo": u.activo,
+        "intentos_login_maximos": u.intentos_login_maximos,
     } for u in usuarios]
+
+
+@router.get("/{usuario_id}")
+def get_usuario(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {
+        "id": usuario.id,
+        "username": usuario.username,
+        "email": usuario.email,
+        "email_respaldo": usuario.email_respaldo,
+        "telefono_respaldo": usuario.telefono_respaldo,
+        "nombre_completo": usuario.nombre_completo,
+        "rol": usuario.rol,
+        "activo": usuario.activo,
+        "intentos_login_maximos": usuario.intentos_login_maximos,
+    }
 
 
 @router.get("/{usuario_id}/cultivos")
@@ -124,6 +137,24 @@ def update_usuario_cultivos(
     return {"usuario_id": usuario_id, "cultivo_ids": cultivo_ids}
 
 
+@router.post("/{usuario_id}/reset-intentos")
+def reset_intentos_login(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin),
+):
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    reiniciadas = login_identifier_limiter.reset_matching(
+        f":{usuario.username.strip().lower()}"
+    )
+    return {
+        "message": "Intentos de inicio de sesión reiniciados",
+        "reiniciadas": reiniciadas,
+    }
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_usuario(
     usuario: UsuarioCreate,
@@ -154,7 +185,8 @@ def create_usuario(
         nombre_completo=usuario.nombre_completo,
         hashed_password=hashed_password,
         rol="administrador" if usuario.rol == "admin" else usuario.rol,
-        activo=True
+        activo=usuario.activo,
+        intentos_login_maximos=usuario.intentos_login_maximos,
     )
     db.add(nuevo_usuario)
     try:
@@ -163,7 +195,11 @@ def create_usuario(
         db.rollback()
         raise HTTPException(status_code=409, detail="El usuario o email ya existe")
     db.refresh(nuevo_usuario)
-    return {"message": "Usuario creado exitosamente", "user_id": nuevo_usuario.id}
+    return {
+        "message": "Usuario creado exitosamente",
+        "id": nuevo_usuario.id,
+        "user_id": nuevo_usuario.id,
+    }
 
 
 @router.put("/{usuario_id}")
@@ -176,6 +212,8 @@ def update_usuario(
     usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    username_anterior = usuario.username
 
     if usuario.id == current_user.id and datos.activo is False:
         raise HTTPException(
@@ -230,6 +268,15 @@ def update_usuario(
         usuario.rol = nuevo_rol
     if datos.activo is not None:
         usuario.activo = datos.activo
+    if datos.intentos_login_maximos is not None:
+        if datos.intentos_login_maximos != usuario.intentos_login_maximos:
+            login_identifier_limiter.reset_matching(
+                f":{username_anterior.strip().lower()}"
+            )
+            login_identifier_limiter.reset_matching(
+                f":{usuario.username.strip().lower()}"
+            )
+        usuario.intentos_login_maximos = datos.intentos_login_maximos
     if datos.password:
         usuario.hashed_password = get_password_hash(datos.password)
         usuario.token_version = (usuario.token_version or 0) + 1
@@ -249,6 +296,7 @@ def update_usuario(
         "nombre_completo": usuario.nombre_completo,
         "rol": usuario.rol,
         "activo": usuario.activo,
+        "intentos_login_maximos": usuario.intentos_login_maximos,
     }
 
 

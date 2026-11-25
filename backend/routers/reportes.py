@@ -19,7 +19,12 @@ from backend.models import (
     Riego,
     Usuario,
 )
-from backend.schemas import REPORTE_TIPOS, ReporteCreate, ReporteResponse
+from backend.schemas import (
+    REPORTE_TIPOS,
+    ReporteCreate,
+    ReporteResponse,
+    ReporteUpdate,
+)
 from backend.security import (
     get_current_active_user,
     is_admin,
@@ -415,6 +420,40 @@ def registrar_historial(
 
     reporte = ReporteGenerado(usuario_id=current_user.id, **datos.model_dump())
     db.add(reporte)
+    db.commit()
+    db.refresh(reporte)
+    return reporte
+
+
+@router.put("/historial/{reporte_id}", response_model=ReporteResponse)
+def actualizar_historial(
+    reporte_id: int,
+    datos: ReporteUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    reporte = db.query(ReporteGenerado).filter(
+        ReporteGenerado.id == reporte_id
+    ).first()
+    if not reporte:
+        raise HTTPException(status_code=404, detail="Reporte no encontrado")
+    if reporte.usuario_id != current_user.id and not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="No puedes editar este reporte")
+
+    cambios = {
+        campo: valor
+        for campo, valor in datos.model_dump(exclude_unset=True).items()
+        if valor is not None or campo == "cultivo_id"
+    }
+    inicio = cambios.get("fecha_inicio", reporte.fecha_inicio)
+    fin = cambios.get("fecha_fin", reporte.fecha_fin)
+    _validate_range(inicio, fin)
+    cultivo_id = cambios.get("cultivo_id", reporte.cultivo_id)
+    if cultivo_id and cultivo_id != reporte.cultivo_id:
+        require_cultivo_access(db, current_user, cultivo_id)
+
+    for campo, valor in cambios.items():
+        setattr(reporte, campo, valor)
     db.commit()
     db.refresh(reporte)
     return reporte

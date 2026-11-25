@@ -262,6 +262,7 @@ function updateSummaryCards(alerts) {
 function updateNavBadge(alerts) {
     const unreadCount = alerts.filter(alert => !alert.leida && !alert.resuelta).length;
     const badge = document.getElementById('nav-alert-badge');
+    if (!badge) return;
     badge.textContent = unreadCount;
     badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
 }

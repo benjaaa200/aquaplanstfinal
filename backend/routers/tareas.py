@@ -1,6 +1,4 @@
 """Centro de tareas y asignaciones con historial y notificaciones."""
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
@@ -34,6 +32,7 @@ from backend.services import (
     require_instalacion_access,
     scoped_instalacion_ids,
 )
+from backend.utils import naive_utc, utcnow
 
 router = APIRouter(prefix="/tareas", tags=["Tareas"])
 
@@ -64,7 +63,7 @@ def serializar(tarea: Tarea, detalle: bool = False) -> dict:
         "atrasada": bool(
             tarea.fecha_limite
             and tarea.estado in ESTADOS_ABIERTOS
-            and tarea.fecha_limite < datetime.utcnow()
+            and naive_utc(tarea.fecha_limite) < utcnow()
         ),
     }
     if detalle:
@@ -221,7 +220,7 @@ def resumen_tareas(
 ):
     query = _scope_query(db, current_user, db.query(Tarea))
     rows = query.all()
-    now = datetime.utcnow()
+    now = utcnow()
     por_estado: dict[str, int] = {}
     for row in rows:
         por_estado[row.estado] = por_estado.get(row.estado, 0) + 1
@@ -234,7 +233,7 @@ def resumen_tareas(
         "completadas": por_estado.get("completada", 0),
         "atrasadas": sum(
             1 for row in rows
-            if row.fecha_limite and row.estado in ESTADOS_ABIERTOS and row.fecha_limite < now
+            if row.fecha_limite and row.estado in ESTADOS_ABIERTOS and naive_utc(row.fecha_limite) < now
         ),
         "mis_tareas": sum(
             1 for row in rows
@@ -355,7 +354,7 @@ def cambiar_estado_tarea(
     estado_anterior = tarea.estado
     tarea.estado = payload.estado
     if payload.estado == "completada":
-        tarea.fecha_completada = datetime.utcnow()
+        tarea.fecha_completada = utcnow()
         tarea.completada_por = current_user.id
     elif estado_anterior == "completada":
         tarea.fecha_completada = None

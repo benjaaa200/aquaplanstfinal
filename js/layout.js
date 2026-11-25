@@ -930,12 +930,15 @@
     getLastSync: function () { return lastSync; }
   };
 
+  function apiBaseUrl() {
+    return window.AQUAPLANTS_API_URL || '/api';
+  }
+
   function apiGet(path) {
     var token = null;
     try { token = localStorage.getItem('aquaplants_token') || sessionStorage.getItem('aquaplants_token'); } catch (e) {}
     if (!token) return Promise.resolve(null);
-    var base = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : (window.AQUAPLANTS_API_URL || '/api');
-    return fetch(base + path, { headers: { Authorization: 'Bearer ' + token } })
+    return fetch(apiBaseUrl() + path, { headers: { Authorization: 'Bearer ' + token } })
       .then(function (response) { return response.ok ? response.json() : null; })
       .catch(function () { return null; });
   }
@@ -1035,7 +1038,7 @@
       markAll.addEventListener('click', function () {
         var token = null;
         try { token = localStorage.getItem('aquaplants_token') || sessionStorage.getItem('aquaplants_token'); } catch (e) {}
-        var base = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : (window.AQUAPLANTS_API_URL || '/api');
+        var base = apiBaseUrl();
         fetch(base + '/notificaciones/marcar-todas', {
           method: 'PUT',
           headers: { Authorization: 'Bearer ' + token }
@@ -1055,7 +1058,7 @@
         var url = item.getAttribute('data-url');
         var token = null;
         try { token = localStorage.getItem('aquaplants_token') || sessionStorage.getItem('aquaplants_token'); } catch (e) {}
-        var base = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : (window.AQUAPLANTS_API_URL || '/api');
+        var base = apiBaseUrl();
         fetch(base + '/notificaciones/' + id + '/leer', {
           method: 'PUT',
           headers: { Authorization: 'Bearer ' + token }
@@ -1094,7 +1097,7 @@
     } catch (e) {}
     if (!token) return;
 
-    var base = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : (window.AQUAPLANTS_API_URL || '/api');
+    var base = apiBaseUrl();
     try {
       notifStream = new EventSource(
         base + '/notificaciones/stream?token=' + encodeURIComponent(token)
@@ -1172,7 +1175,7 @@
   }
 
   function mount() {
-    var key = currentKey();
+    var key = activeKey(currentKey());
     var user = readUser();
     if (!user) return;
 

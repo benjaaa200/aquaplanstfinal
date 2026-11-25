@@ -232,7 +232,7 @@ async function handleScheduleCycle(event) {
     try {
         const result = await apiClient.post('/riego/programar', schedule);
         closeScheduleModal();
-        alert(result.message);
+        alert(result.mensaje || 'Riego programado correctamente');
         await Promise.all([loadZones(), loadHistory()]);
     } catch (error) {
         alert('Error al programar: ' + error.message);

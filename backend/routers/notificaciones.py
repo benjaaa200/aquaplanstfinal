@@ -9,9 +9,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from backend.database import SessionLocal, get_db
+from backend.database import get_db
 from backend.models import Notificacion, Usuario
-from backend.schemas_ops import NotificacionAdminCreate
+from backend.schemas_ops import NotificacionAdminCreate, NotificacionUpdate
 from backend.security import (
     get_current_active_user,
     get_current_user_from_query_token,
@@ -95,34 +95,32 @@ def resumen_notificaciones(
     }
 
 
-def _resumen_en_vivo(usuario_id: int) -> dict:
-    """Short read-only summary used by the SSE stream (own session per poll)."""
-    db = SessionLocal()
-    try:
-        base = db.query(Notificacion).filter(
+def _resumen_en_vivo(db: Session, usuario_id: int) -> dict:
+    """Short read-only summary used by the SSE stream."""
+    base = db.query(Notificacion).filter(Notificacion.usuario_id == usuario_id)
+    no_leidas = base.filter(Notificacion.leida.is_(False)).count()
+    urgentes = base.filter(
+        Notificacion.leida.is_(False),
+        Notificacion.prioridad.in_(("urgente", "importante")),
+    ).count()
+    ultimo_id = (
+        db.query(func.max(Notificacion.id)).filter(
             Notificacion.usuario_id == usuario_id
-        )
-        no_leidas = base.filter(Notificacion.leida.is_(False)).count()
-        urgentes = base.filter(
-            Notificacion.leida.is_(False),
-            Notificacion.prioridad.in_(("urgente", "importante")),
-        ).count()
-        ultimo_id = db.query(func.max(Notificacion.id)).filter(
-            Notificacion.usuario_id == usuario_id
-        ).scalar() or 0
-        return {
-            "total": base.count(),
-            "no_leidas": no_leidas,
-            "urgentes": urgentes,
-            "ultimo_id": ultimo_id,
-        }
-    finally:
-        db.close()
+        ).scalar()
+        or 0
+    )
+    return {
+        "total": base.count(),
+        "no_leidas": no_leidas,
+        "urgentes": urgentes,
+        "ultimo_id": ultimo_id,
+    }
 
 
 @router.get("/stream")
 async def stream_notificaciones(
     request: Request,
+    db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user_from_query_token),
 ):
     """Server-Sent Events with the unread counter for the notification bell."""
@@ -130,7 +128,7 @@ async def stream_notificaciones(
     async def event_generator():
         ultimo_envio = None
         while not await request.is_disconnected():
-            resumen = await run_in_threadpool(_resumen_en_vivo, current_user.id)
+            resumen = await run_in_threadpool(_resumen_en_vivo, db, current_user.id)
             firma = (resumen["no_leidas"], resumen["urgentes"], resumen["ultimo_id"])
             if firma != ultimo_envio:
                 ultimo_envio = firma
@@ -150,7 +148,23 @@ async def stream_notificaciones(
     )
 
 
+@router.get("/{notificacion_id}")
+def obtener_notificacion(
+    notificacion_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    notificacion = db.query(Notificacion).filter(
+        Notificacion.id == notificacion_id,
+        Notificacion.usuario_id == current_user.id,
+    ).first()
+    if not notificacion:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    return serializar(notificacion)
+
+
 @router.put("/marcar-todas")
+
 def marcar_todas_leidas(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user),
@@ -228,7 +242,28 @@ def marcar_leida(
     return serializar(notificacion)
 
 
+@router.put("/{notificacion_id}")
+def actualizar_notificacion(
+    notificacion_id: int,
+    payload: NotificacionUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user),
+):
+    notificacion = db.query(Notificacion).filter(
+        Notificacion.id == notificacion_id,
+        Notificacion.usuario_id == current_user.id,
+    ).first()
+    if not notificacion:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    for campo, valor in payload.model_dump(exclude_unset=True).items():
+        setattr(notificacion, campo, valor)
+    db.commit()
+    db.refresh(notificacion)
+    return serializar(notificacion)
+
+
 @router.delete("/{notificacion_id}", status_code=status.HTTP_204_NO_CONTENT)
+
 def eliminar_notificacion(
     notificacion_id: int,
     db: Session = Depends(get_db),

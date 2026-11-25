@@ -42,7 +42,7 @@ python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Edita `.env` y establece `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSLMODE` (`require` para RDS, `disable` para PostgreSQL local sin TLS) y una `SECRET_KEY` aleatoria de al menos 32 caracteres. En producción, define `SKIP_INIT_DB=1` para que la API no ejecute DDL automático. Puedes generar la clave con:
+Edita `.env` y establece `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSLMODE` (`require` para RDS/Render, `disable` para PostgreSQL local sin TLS) y una `SECRET_KEY` aleatoria de al menos 32 caracteres. En Render Postgres define `DATABASE_URL` con la URL interna de la base; esa variable tiene prioridad sobre `DB_*`. En producción, define `SKIP_INIT_DB=1` para que la API no ejecute DDL automático. Puedes generar la clave con:
 
 ```powershell
 python -c "import secrets; print(secrets.token_urlsafe(48))"

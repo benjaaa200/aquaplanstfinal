@@ -94,7 +94,9 @@ restringidas. Si RDS está en subred privada o no quieres exponerlo, usa
 3. Runtime **Python 3**, build `pip install -r requirements.txt`, start:
    `uvicorn main:app --host 0.0.0.0 --port $PORT`.
 4. Health check: `/api/health`.
-5. Variables de entorno (usa las de la sección 1) y además:
+5. Variables de entorno:
+   - `DATABASE_URL=<Internal Database URL de Render Postgres>` (tiene prioridad sobre `DB_*`; usa la URL interna de la misma región)
+   - `DB_SSLMODE=require`
    - `API_HOST=0.0.0.0`
    - `API_WORKERS=1`
    - `CORS_ORIGINS=https://<tu-frontend>`
@@ -107,10 +109,10 @@ restringidas. Si RDS está en subred privada o no quieres exponerlo, usa
      `<meta name="aquaplants-api-base" content="https://<tu-api>">`.
    - Si compartes dominio con proxy `/api`, no cambies nada: `js/config.js`
      usa el mismo origen.
-7. En RDS, permite el tráfico desde la IP de salida de Render (plan con IP
-   estática) o, para pruebas, habilita acceso público con TLS y una regla de
-   security group lo más acotada posible. **No** abras el puerto 5432 a
-   `0.0.0.0/0` más allá de una prueba temporal.
+7. Con Render Postgres, crea la base en la **misma región** que el servicio y
+   pega su **Internal Database URL** en `DATABASE_URL`. No necesitas AWS RDS.
+   Si conectas una BD externa, restringe el acceso por IP y usa TLS; **no**
+   abras el puerto 5432 a `0.0.0.0/0` más allá de una prueba temporal.
 
 ### 3.2 Opción AWS App Runner
 

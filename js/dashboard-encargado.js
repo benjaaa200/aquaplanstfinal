@@ -109,12 +109,10 @@ function cargarAlertas(alertas) {
   const alertasCard = document.getElementById('alertasCard');
   const alertasList = document.getElementById('alertasList');
   const alertBadge = document.getElementById('nav-alert-badge');
-  const notifDot = document.getElementById('notifDot');
 
   if (alertas.length === 0) {
     alertasCard.style.display = 'none';
     if (alertBadge) alertBadge.style.display = 'none';
-    if (notifDot) notifDot.style.display = 'none';
     return;
   }
 
@@ -123,8 +121,6 @@ function cargarAlertas(alertas) {
     alertBadge.textContent = alertas.length;
     alertBadge.style.display = 'inline';
   }
-  if (notifDot) notifDot.style.display = 'block';
-
   alertasList.innerHTML = alertas.map((alerta) => {
     const nivelClass = alerta.severidad === 'critical' ? 'danger' : 'warning';
     const nivelText = alerta.severidad === 'critical' ? 'Crítica' : 'Advertencia';
